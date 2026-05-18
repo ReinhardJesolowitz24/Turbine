@@ -6,6 +6,34 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ---
 
+## [Documentation Correction] — 2026-05-18
+
+### Changed (documentation only — no code change)
+- **CRYPTANALYSIS.md**: Added section 1.3 "Operating mode:
+  Plaintext-feedback (CFB-like)" documenting an empirically discovered
+  cross-block feedback mechanism. The earlier classification as
+  "synchronous stream cipher" was corrected to "CFB-like with
+  plaintext checksum chained across blocks via `block_quersumme`
+  (line 814 of Window1.xaml.cs)".
+- **SECURITY.md**: Updated authentication discussion. Added note
+  about de-facto tamper detection arising from the CFB-like feedback.
+- **README.md / README_DE.md**: Added one-line note about CFB-like
+  feedback and tamper-propagation property.
+- **COMPARISON_WITH_RC4.md**: Added clarifying note about Turbine's
+  operating mode in the structural comparison.
+
+### Rationale
+An empirical test (1-bit flip at ciphertext position 2500) revealed
+that decryption errors propagate to the end of the file, not just
+within one 8-byte block as initially predicted from code review.
+Investigation traced the cause to the `block_quersumme` variable
+(line 814) which accumulates an XOR-checksum of plaintext bytes and
+feeds it into the next block's processing (lines 3098, 3100, 3104).
+This is functionally equivalent to NIST CFB mode (SP 800-38A) and
+was an intentional 2012 design choice, recalled by the author.
+
+---
+
 ## [Unreleased / V1 Documentation Update] — 2026-05-15
 
 ### Added
