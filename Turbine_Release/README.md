@@ -1,7 +1,7 @@
 # Turbine
 
 A free, open-source file encryption tool for personal use.
-Originally developed in 2012 by **\<DEIN VOLLER NAME\>** as a way to protect
+Originally developed in 2012 by **Reinhard Jesolowitz** as a way to protect
 personal data — passwords, login files, sensitive documents — against
 casual access (e.g., a lost USB stick).
 
@@ -19,6 +19,9 @@ naive content filters and looks unremarkable on disk.
 - **Password-based encryption** (6 to 1024 characters)
 - **Cryptographically random IV** for every file (no two outputs are identical)
 - **Stop-go-clocked shift register** design, structurally related to Trivium
+- **CFB-like cross-block feedback** — any tampering with the ciphertext
+  destroys all subsequent plaintext (de-facto manipulation detection
+  without an explicit MAC)
 - **No backdoor, no master key** — verifiable by reading the source
 
 ---
