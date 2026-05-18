@@ -93,6 +93,8 @@ point for the WEP attack: short, related keys (as used in WEP's
 | **Key Scheduling** | Single-step KSA, vulnerable to related-key attacks | Multi-stage iterative mix, no related-key attacks known |
 | **Real-world breaks** | WEP (seconds), TLS-RC4 (hours), many more | None publicly known |
 | **Public peer review** | 25+ years, hundreds of researchers | First external review in 2026 |
+| **Operating mode** | Pure stream (no cross-byte feedback) | **CFB-like with `block_quersumme` feedback** (see CRYPTANALYSIS.md §1.3) |
+| **Tamper detection** | None — single-byte modification stays local | **De-facto**: single bit flip propagates to end of file |
 
 The structural differences favor Turbine in **every measurable category**
 except the most important one: **breadth of analysis**.
