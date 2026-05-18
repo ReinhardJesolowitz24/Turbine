@@ -22,7 +22,11 @@ It is **not** designed for:
 - Defense against intelligence agencies or well-funded cryptanalysts
 - High-stakes commercial secret protection
 - Long-term archival where ciphers may face decades of future analysis
-- Authentication / integrity (it does not sign or MAC the ciphertext)
+- Authentication / integrity (it does not sign or MAC the ciphertext —
+  but note that the CFB-like feedback mode provides **de-facto tamper
+  detection**: any modification to the ciphertext destroys all subsequent
+  plaintext, making the corruption obvious to the receiver; see
+  CRYPTANALYSIS.md section 1.3 for details)
 
 ---
 
@@ -98,6 +102,22 @@ Comprehensive cryptanalytic review on 100 MB of keystream output
 | Cross-byte bit correlation matrix (64 pairs) | Zero significant correlations — bias does not cross byte boundaries |
 | 3-bit linear approximations (56 triples) | None significant (all \|Z\| < 3.5) |
 | Bias independence test | Bit 6↔7 and Bit 2↔3 biases are statistically **independent** (Z = -0.09) — they cannot be combined into a stronger attack |
+| **Tamper-propagation test (2026-05-18)** | **1-bit flip in ciphertext destroys all plaintext from that point to end of file — CFB-like chaining via `block_quersumme` confirmed** |
+
+### Tamper-detection property (informal)
+
+Because of the CFB-like cross-block feedback (see CRYPTANALYSIS.md §1.3),
+Turbine provides a form of **manipulation detection without an explicit
+MAC**: any change to the ciphertext, even a single bit, causes the
+decryption from that point onward to produce garbage. The receiver
+notices immediately. This is not a cryptographic guarantee in the
+strict sense (an attacker could deliberately corrupt the entire tail
+of the file), but it does prevent **silent targeted modification** of
+specific plaintext values.
+
+For threat models requiring strict cryptographic integrity guarantees
+(e.g., where the receiver cannot tolerate any uncertainty), an explicit
+authenticator (HMAC-SHA256 or similar) should still be added.
 
 ---
 
