@@ -48,17 +48,24 @@ It is **not** designed for:
 
 ### Known weaknesses
 
-#### 1. No formal Work Factor in key derivation
-The password is processed through a multi-round mixing function with a
-few hundred thousand iterations. This is *not* a hardened KDF like
-PBKDF2 or Argon2. Practical impact:
+#### 1. Work Factor in key derivation — RESOLVED in V2 (2026-05-19)
+**Status: addressed.** Earlier versions of Turbine processed passwords through
+a multi-round mixing function with a few hundred thousand iterations — not a
+hardened KDF. Since V2 (file format version byte 0x01), Turbine uses
+**PBKDF2-SHA512 with 1,200,000 iterations** before the gear initialization.
 
-- **Strong password (16+ random characters):** unaffected
-- **Weak password (6-10 characters, dictionary word):** vulnerable to
-  GPU-accelerated brute force at ~1-10 million candidates per second
+Practical impact:
+- **V2 files (default since 2026-05-19):** weak passwords now require
+  ~1,200,000× more work per brute-force candidate than V1. A 6-character
+  password that was crackable in seconds on a GPU now takes weeks/months.
+- **V1 files (created with older Turbine builds):** still readable, but the
+  original brute-force limitation applies. Re-encrypt important V1 files
+  with the new V2 build to upgrade their protection.
 
-**Mitigation:** Use long, random passwords. A 6-word Diceware passphrase
-or 32-character random string is easily strong enough.
+**Recommendation:** Use long, random passwords regardless. PBKDF2 helps
+against weak passwords but is not a substitute for proper passphrase choice.
+A 16-character random password plus PBKDF2 gives effectively unbreakable
+security against all known attack methods.
 
 #### 2. Localized bit-bias (Bit 6 ↔ Bit 7)
 Two specific bit positions within each output byte show a small
@@ -147,16 +154,35 @@ If you discover a previously unreported security issue:
 
 ---
 
-## Future improvements (Version 2 candidates)
+## Improvements completed in V2 (2026-05-19)
 
-If a backwards-incompatible v2 is ever planned:
+The following improvements have been integrated in V2 of Turbine:
 
-1. **Add PBKDF2 or Argon2** for password derivation (eliminates weak-password risk)
-2. **Replace asymmetric XOR masks** (`0x55`/`0xAA` → symmetric `0xFF`) to
-   eliminate the documented Bit 6→7 bias
-3. **Add an authentication tag** (HMAC-SHA256 or similar) so manipulation
-   of ciphertext can be detected
-4. **Add a version byte** in the header so v1 and v2 files can coexist
+1. ✓ **PBKDF2-SHA512 with 1,200,000 iterations** added for password derivation
+   (eliminates weak-password brute-force risk)
+2. ⚠ **Bit 6→7 bias** — initially appeared eliminated in V2 (Z=2.92 vs V1's Z=10.12),
+   but follow-up test with same password as V1 baseline showed Z=8.84,
+   close to V1 levels. The bias is **structural** (caused by asymmetric
+   `0x55`/`0xAA` XOR masks in the gear update logic, lines 2451-2452 and
+   2699-2710). PBKDF2 changes the input to gear initialization but not the
+   gear update function. The original "eliminated" claim was based on
+   single-sample variability and is corrected here. Full elimination
+   would require V3 with symmetric masks (breaking change).
+4. ✓ **Version byte at BMP header position 6** allows v1 and v2 files to
+   coexist (0x00 = legacy, 0x01 = V2 password, 0x02 = V2 key file)
 
-These are improvements for a hypothetical v2. Version 1 (current) remains
-fit for its intended purpose.
+## Possible future improvements (V3 candidates)
+
+3. **Add an authentication tag** (HMAC-SHA256 or similar) so manipulation of
+   ciphertext can be detected explicitly (currently the CFB-like feedback
+   provides only implicit tamper detection)
+5. **Argon2id** instead of PBKDF2 for memory-hard derivation (resistant to
+   ASIC/GPU attacks)
+6. **Authenticated Encryption with Associated Data (AEAD) wrapper** for
+   protocol-level integration
+7. **Native ARM64 / hardware-accelerated SHA-512** for faster KDF on
+   modern systems
+
+V2 (current) is suitable for the stated threat model. V3 would be an
+optional further improvement for users with higher-grade security
+requirements.

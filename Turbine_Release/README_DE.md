@@ -1,7 +1,7 @@
 # Turbine
 
 Ein kostenloses, quelloffenes Werkzeug zur Datei-Verschlüsselung für den
-persönlichen Gebrauch. Ursprünglich 2012 entwickelt von **Reinhard Jesolowitz**,
+persönlichen Gebrauch. Ursprünglich 2012 entwickelt von **\<DEIN VOLLER NAME\>**,
 um persönliche Daten — Passwörter, Login-Dateien, sensible Dokumente — vor
 zufälligem Zugriff zu schützen (z.B. bei einem verlorenen USB-Stick).
 
@@ -18,6 +18,9 @@ einem BMP-Container verpackt — das macht die Datei für naive Inhaltsfilter
 unverdächtig und unauffällig auf der Festplatte.
 
 - **Passwort-basierte Verschlüsselung** (6 bis 1024 Zeichen)
+- **PBKDF2-SHA512 Schlüssel-Ableitung** (V2, 1.200.000 Iterationen) —
+  macht Brute-Force-Angriffe ~1,2 Millionen mal teurer bei schwachen
+  Passwörtern. Alte V1-Dateien bleiben weiterhin lesbar.
 - **Kryptografisch zufälliger IV** für jede Datei (keine zwei Outputs identisch)
 - **Stop-Go-getakteter Schieberegister-Cipher**, strukturell verwandt mit Trivium
 - **CFB-ähnliche Block-Verkettung** — jede Manipulation am Chiffretext

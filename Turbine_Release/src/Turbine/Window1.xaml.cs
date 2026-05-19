@@ -833,6 +833,139 @@ namespace Turbine
                 rng.GetBytes(zufall);
             }
 
+            // ===== KDF V2/V3 - Schluessel-Ableitung mit Whitening =====
+            // Versions-Byte im BMP-Header (Position 6, normalerweise "reserved"):
+            //   0x00 = Legacy V1 (alte Dateien, kein KDF)
+            //   0x01 = V2 Passwort + PBKDF2-SHA512 mit IV als Salt
+            //   0x02 = V2 Schluesseldatei-Modus (raw bytes, kein Whitening - Legacy)
+            //   0x03 = V3 Schluesseldatei-Modus mit SHA-512-Whitening (neuer Default fuer Key-Files)
+            byte version_byte_to_write = 0x00;
+            byte version_byte_of_file = 0x00;
+
+            if (richtung_info == 0)
+            {
+                // Verschluesselung: neue Key-File-Dateien erhalten Version 0x03 (mit Whitening),
+                // neue Passwort-Dateien Version 0x01 (mit PBKDF2)
+                version_byte_to_write = (schluesseldatei_geladen == 1) ? (byte)0x03 : (byte)0x01;
+            }
+            else
+            {
+                // Entschluesselung: Versions-Byte und IV vorab aus Datei lesen
+                try
+                {
+                    using (var pre_fs = new FileStream(dateigroesse1, FileMode.Open, FileAccess.Read))
+                    {
+                        if (pre_fs.Length >= 70)
+                        {
+                            pre_fs.Seek(6, SeekOrigin.Begin);
+                            version_byte_of_file = (byte)pre_fs.ReadByte();
+                            if (version_byte_of_file == 0x01 || version_byte_of_file == 0x02 || version_byte_of_file == 0x03)
+                            {
+                                pre_fs.Seek(54, SeekOrigin.Begin);
+                                pre_fs.Read(zufall, 0, 16);
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // bei Lese-Fehler: Legacy-Modus annehmen
+                    version_byte_of_file = 0x00;
+                }
+            }
+
+            // ----- V2: PBKDF2 fuer Passwort-Modus (Versions-Byte 0x01) -----
+            bool use_pbkdf2 = false;
+            if (richtung_info == 0 && schluesseldatei_geladen == 0)
+            {
+                use_pbkdf2 = true;
+            }
+            if (richtung_info == 1 && version_byte_of_file == 0x01)
+            {
+                use_pbkdf2 = true;
+            }
+
+            if (use_pbkdf2)
+            {
+                // ReportProgress damit UI sieht dass etwas passiert (KDF dauert ~5-10 Sek)
+                if (backgroundWorker1 != null && backgroundWorker1.WorkerReportsProgress)
+                {
+                    backgroundWorker1.ReportProgress(1);
+                }
+
+                // Schritt 1: Master-Key-Extraktion mit PBKDF2-SHA512 (LANGSAM, einmalig)
+                byte[] master_key;
+                using (var pbkdf2 = new Rfc2898DeriveBytes(passwort1, zufall, 1200000, HashAlgorithmName.SHA512))
+                {
+                    master_key = pbkdf2.GetBytes(64);
+                }
+
+                // Schritt 2: Expansion auf 1024 Byte mit Counter-Mode SHA-512 (SCHNELL)
+                byte[] expanded = new byte[1024];
+                for (int i = 0; i < 16; i++)
+                {
+                    using (var sha = SHA512.Create())
+                    {
+                        byte[] input = new byte[master_key.Length + 1];
+                        Array.Copy(master_key, input, master_key.Length);
+                        input[master_key.Length] = (byte)i;
+                        byte[] block = sha.ComputeHash(input);
+                        Array.Copy(block, 0, expanded, i * 64, 64);
+                    }
+                }
+                name_der_datei6 = expanded;
+                passwortgroesse = 1024;
+                gen_passwort = 1024;
+            }
+
+            // ----- V3: SHA-512-Whitening fuer Key-File-Modus (Versions-Byte 0x03) -----
+            // Kein PBKDF2 noetig (1024-Byte-Key-File hat schon ~8000 bit Entropie),
+            // aber Whitening absorbiert strukturelle Patterns aus JPG/ZIP/etc.
+            // Damit verschwinden Approximate-Entropy-FAILs aus V2 Key-File-Modus (0x02).
+            bool use_keyfile_whitening = false;
+            if (richtung_info == 0 && schluesseldatei_geladen == 1)
+            {
+                use_keyfile_whitening = true;
+            }
+            if (richtung_info == 1 && version_byte_of_file == 0x03)
+            {
+                use_keyfile_whitening = true;
+            }
+
+            if (use_keyfile_whitening)
+            {
+                // Schritt 1: SHA-512 ueber Key-File-Bytes (1023) + IV (16) = 1039 Bytes Input
+                // Der IV macht den Master-Key per-Datei einzigartig, auch wenn das
+                // gleiche Key-File mehrfach verwendet wird.
+                byte[] kf_input = new byte[1023 + 16];
+                Array.Copy(name_der_datei6X, 0, kf_input, 0, 1023);
+                Array.Copy(zufall, 0, kf_input, 1023, 16);
+
+                byte[] kf_master_key;
+                using (var sha = SHA512.Create())
+                {
+                    kf_master_key = sha.ComputeHash(kf_input);
+                }
+
+                // Schritt 2: Counter-Mode-Expansion auf 1024 Byte (selbes Verfahren wie V2)
+                byte[] kf_expanded = new byte[1024];
+                for (int i = 0; i < 16; i++)
+                {
+                    using (var sha = SHA512.Create())
+                    {
+                        byte[] input = new byte[kf_master_key.Length + 1];
+                        Array.Copy(kf_master_key, input, kf_master_key.Length);
+                        input[kf_master_key.Length] = (byte)i;
+                        byte[] block = sha.ComputeHash(input);
+                        Array.Copy(block, 0, kf_expanded, i * 64, 64);
+                    }
+                }
+                name_der_datei6 = kf_expanded;
+                passwortgroesse = 1024;
+                gen_passwort = 1024;
+            }
+            // ===== Ende KDF V2/V3 =====
+
 
             try
             {
@@ -1831,7 +1964,9 @@ namespace Turbine
                             binWriter2.Write((byte)(dateiLaenge5 >> 8));
                             binWriter2.Write((byte)(dateiLaenge5 >> 16));
                             binWriter2.Write((byte)(dateiLaenge5 >> 24));
-                            binWriter2.Write((byte)(0x0));
+                            // Position 6 = Turbine-Versions-Byte (KDF V2):
+                            //   0x00 = Legacy V1, 0x01 = V2 mit PBKDF2, 0x02 = V2 Key-File
+                            binWriter2.Write(version_byte_to_write);
                             binWriter2.Write((byte)(0x0));
                             binWriter2.Write((byte)(0x0));
                             binWriter2.Write((byte)(0x0));
@@ -4967,7 +5102,7 @@ namespace Turbine
         private void button7_Click(object sender, RoutedEventArgs e)
         {
             MessageBoxButton buttons = MessageBoxButton.YesNo;
-            string message = "Mighty mouse is a ANTI-keylogger function. If you are not sure, that a keyboard-logger isn´t installed on this PC (e.g. a public PC in a internetcafe) - then use the mouse to type in the key (or a part of the key). With the mighty mouse function you are able to type in numbers, letters (hex-code) and SPECIAL CHARACTERS. ";
+            string message = "Mighty mouse is an ANTI-keylogger function. If you are not sure that a keyboard-logger isn´t installed on this PC (e.g. a public PC in an internet cafe) - then use the mouse to type in the key (or a part of the key). With the mighty mouse function you are able to type in ALL 95 printable ASCII characters: digits (0-9), uppercase letters (A-Z), lowercase letters (a-z), special characters and SPACE. Note: Mighty mouse only protects against simple keyboard-loggers - it does NOT protect against screen-recorders or advanced malware.";
             string caption = "Use mighty mouse?";
             string erg_maus2 = "Yes";
 
@@ -4985,9 +5120,10 @@ namespace Turbine
         private void SpecialChar_Click(object sender, RoutedEventArgs e)
         {
             Button b = sender as Button;
-            if (b != null && b.Content != null)
+            if (b != null && (b.Tag != null || b.Content != null))
             {
-                string charToadd = b.Content.ToString();
+                // Tag hat Vorrang vor Content - erlaubt z.B. Anzeige "SP" mit Wert " "
+                string charToadd = b.Tag != null ? b.Tag.ToString() : b.Content.ToString();
 
                 if (passwort_anzeige == 1)
                 {

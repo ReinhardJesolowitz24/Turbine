@@ -7,11 +7,11 @@
     <Grid Height="700" Width="440" Background="#F0F0F0">
         <Grid.Resources>
             <Style TargetType="Button" x:Key="MightyBaseStyle">
-                <Setter Property="Width" Value="30"/>
-                <Setter Property="Height" Value="30"/>
-                <Setter Property="Margin" Value="2"/>
+                <Setter Property="Width" Value="18"/>
+                <Setter Property="Height" Value="18"/>
+                <Setter Property="Margin" Value="1"/>
                 <Setter Property="FontWeight" Value="Bold"/>
-                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="FontSize" Value="9"/>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="Button">
@@ -70,14 +70,20 @@
         <Image Margin="206,0,204,169" Name="image5" Stretch="Fill" Source="/Turbine;component/Schloss.JPG" Visibility="Hidden" Height="20" VerticalAlignment="Bottom" />
         <Button Margin="181.093,241,112.156,0" Name="button7" Click="button7_Click" Height="28.945" VerticalAlignment="Top">mighty mouse (optional)</Button>
         <!-- Mighty Mouse Keypad -->
-        <Grid Name="MightyMousePanel" Visibility="Hidden" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,280" Width="400">
+        <Border Name="MightyMousePanel" Visibility="Hidden" VerticalAlignment="Top" HorizontalAlignment="Center"
+                Margin="0,275,0,0" Width="400" Background="#F5F5F5" BorderBrush="#555555" BorderThickness="2" CornerRadius="6" Padding="2">
+        <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            
-            <!-- Hex Numbers -->
+
+            <!-- Row 0: Hex/Decimal Numbers 0-9 (existing handlers) -->
             <WrapPanel Grid.Row="0" HorizontalAlignment="Center">
                 <Button Name="button22" Style="{StaticResource MightyBaseStyle}" Background="LightBlue" Click="button22_Click">0</Button>
                 <Button Name="button23" Style="{StaticResource MightyBaseStyle}" Background="LightBlue" Click="button23_Click">1</Button>
@@ -90,19 +96,9 @@
                 <Button Name="button13" Style="{StaticResource MightyBaseStyle}" Background="LightBlue" Click="button13_Click">8</Button>
                 <Button Name="button14" Style="{StaticResource MightyBaseStyle}" Background="LightBlue" Click="button14_Click">9</Button>
             </WrapPanel>
-            
-            <!-- Hex Letters -->
-            <WrapPanel Grid.Row="1" HorizontalAlignment="Center" Margin="0,5,0,0">
-                <Button Name="button15" Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="button15_Click">A</Button>
-                <Button Name="button16" Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="button16_Click">B</Button>
-                <Button Name="button17" Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="button17_Click">C</Button>
-                <Button Name="button18" Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="button18_Click">D</Button>
-                <Button Name="button19" Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="button19_Click">E</Button>
-                <Button Name="button20" Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="button20_Click">F</Button>
-            </WrapPanel>
 
-            <!-- Special Characters -->
-            <WrapPanel Grid.Row="2" HorizontalAlignment="Center" Margin="0,5,0,0">
+            <!-- Row 1: Common Special Characters (existing) -->
+            <WrapPanel Grid.Row="1" HorizontalAlignment="Center" Margin="0,3,0,0">
                  <Button Style="{StaticResource MightyBaseStyle}" Background="#FFD700" Click="SpecialChar_Click" Content="!"/>
                  <Button Style="{StaticResource MightyBaseStyle}" Background="#FFD700" Click="SpecialChar_Click" Content="@"/>
                  <Button Style="{StaticResource MightyBaseStyle}" Background="#FFD700" Click="SpecialChar_Click" Content="#"/>
@@ -118,7 +114,99 @@
                  <Button Style="{StaticResource MightyBaseStyle}" Background="#FFD700" Click="SpecialChar_Click" Content=","/>
                  <Button Style="{StaticResource MightyBaseStyle}" Background="#FFD700" Click="SpecialChar_Click" Content="?"/>
             </WrapPanel>
+
+            <!-- Row 2: Lowercase a-m (NEW - extends to full ASCII) -->
+            <WrapPanel Grid.Row="2" HorizontalAlignment="Center" Margin="0,3,0,0">
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFFFCC" Click="SpecialChar_Click" Content="a"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFFFCC" Click="SpecialChar_Click" Content="b"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFFFCC" Click="SpecialChar_Click" Content="c"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFFFCC" Click="SpecialChar_Click" Content="d"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFFFCC" Click="SpecialChar_Click" Content="e"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFFFCC" Click="SpecialChar_Click" Content="f"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFFFCC" Click="SpecialChar_Click" Content="g"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFFFCC" Click="SpecialChar_Click" Content="h"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFFFCC" Click="SpecialChar_Click" Content="i"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFFFCC" Click="SpecialChar_Click" Content="j"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFFFCC" Click="SpecialChar_Click" Content="k"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFFFCC" Click="SpecialChar_Click" Content="l"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFFFCC" Click="SpecialChar_Click" Content="m"/>
+            </WrapPanel>
+
+            <!-- Row 3: Lowercase n-z (NEW) -->
+            <WrapPanel Grid.Row="3" HorizontalAlignment="Center" Margin="0,3,0,0">
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFFFCC" Click="SpecialChar_Click" Content="n"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFFFCC" Click="SpecialChar_Click" Content="o"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFFFCC" Click="SpecialChar_Click" Content="p"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFFFCC" Click="SpecialChar_Click" Content="q"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFFFCC" Click="SpecialChar_Click" Content="r"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFFFCC" Click="SpecialChar_Click" Content="s"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFFFCC" Click="SpecialChar_Click" Content="t"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFFFCC" Click="SpecialChar_Click" Content="u"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFFFCC" Click="SpecialChar_Click" Content="v"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFFFCC" Click="SpecialChar_Click" Content="w"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFFFCC" Click="SpecialChar_Click" Content="x"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFFFCC" Click="SpecialChar_Click" Content="y"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFFFCC" Click="SpecialChar_Click" Content="z"/>
+            </WrapPanel>
+
+            <!-- Row 4: Uppercase A-M (NEW - A-F integrated here, no longer separate hex row) -->
+            <WrapPanel Grid.Row="4" HorizontalAlignment="Center" Margin="0,3,0,0">
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="SpecialChar_Click" Content="A"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="SpecialChar_Click" Content="B"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="SpecialChar_Click" Content="C"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="SpecialChar_Click" Content="D"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="SpecialChar_Click" Content="E"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="SpecialChar_Click" Content="F"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="SpecialChar_Click" Content="G"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="SpecialChar_Click" Content="H"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="SpecialChar_Click" Content="I"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="SpecialChar_Click" Content="J"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="SpecialChar_Click" Content="K"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="SpecialChar_Click" Content="L"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="SpecialChar_Click" Content="M"/>
+            </WrapPanel>
+
+            <!-- Row 5: Uppercase N-Z + SPACE (NEW) -->
+            <WrapPanel Grid.Row="5" HorizontalAlignment="Center" Margin="0,3,0,0">
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="SpecialChar_Click" Content="N"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="SpecialChar_Click" Content="O"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="SpecialChar_Click" Content="P"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="SpecialChar_Click" Content="Q"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="SpecialChar_Click" Content="R"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="SpecialChar_Click" Content="S"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="SpecialChar_Click" Content="T"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="SpecialChar_Click" Content="U"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="SpecialChar_Click" Content="V"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="SpecialChar_Click" Content="W"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="SpecialChar_Click" Content="X"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="SpecialChar_Click" Content="Y"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="LightGreen" Click="SpecialChar_Click" Content="Z"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#D3D3D3" Click="SpecialChar_Click" Tag=" " Content="SP" FontSize="8" ToolTip="Space" Width="40"/>
+            </WrapPanel>
+
+            <!-- Row 6: Additional Symbols all in one row (NEW) -->
+            <WrapPanel Grid.Row="6" HorizontalAlignment="Center" Margin="0,3,0,0">
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFD700" Click="SpecialChar_Click" Content="&quot;"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFD700" Click="SpecialChar_Click" Content="'"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFD700" Click="SpecialChar_Click" Content="("/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFD700" Click="SpecialChar_Click" Content=")"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFD700" Click="SpecialChar_Click" Content="/"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFD700" Click="SpecialChar_Click" Content=":"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFD700" Click="SpecialChar_Click" Content=";"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFD700" Click="SpecialChar_Click" Content="&lt;"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFD700" Click="SpecialChar_Click" Content="&gt;"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFD700" Click="SpecialChar_Click" Content="["/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFD700" Click="SpecialChar_Click" Content="\"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFD700" Click="SpecialChar_Click" Content="]"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFD700" Click="SpecialChar_Click" Content="^"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFD700" Click="SpecialChar_Click" Content="`"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFD700" Click="SpecialChar_Click" Content="{}{"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFD700" Click="SpecialChar_Click" Content="|"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFD700" Click="SpecialChar_Click" Content="{}}"/>
+                 <Button Style="{StaticResource MightyBaseStyle}" Background="#FFD700" Click="SpecialChar_Click" Content="~"/>
+            </WrapPanel>
         </Grid>
+        </Border>
         <Label Height="28" HorizontalAlignment="Left" Margin="10,138,0,0" Name="label6" VerticalAlignment="Top" Width="120" FontWeight="Black" IsEnabled="False">Choose Source file</Label>
     </Grid>
 </Window>

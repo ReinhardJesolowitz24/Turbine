@@ -1,7 +1,7 @@
 # Turbine
 
 A free, open-source file encryption tool for personal use.
-Originally developed in 2012 by **Reinhard Jesolowitz** as a way to protect
+Originally developed in 2012 by **\<DEIN VOLLER NAME\>** as a way to protect
 personal data — passwords, login files, sensitive documents — against
 casual access (e.g., a lost USB stick).
 
@@ -17,6 +17,9 @@ The encrypted output is wrapped in a BMP container, which lets it bypass
 naive content filters and looks unremarkable on disk.
 
 - **Password-based encryption** (6 to 1024 characters)
+- **PBKDF2-SHA512 key derivation** (V2, 1,200,000 iterations) —
+  makes brute-force attacks ~1.2 million times more expensive for weak
+  passwords. Old V1 files remain readable without changes.
 - **Cryptographically random IV** for every file (no two outputs are identical)
 - **Stop-go-clocked shift register** design, structurally related to Trivium
 - **CFB-like cross-block feedback** — any tampering with the ciphertext

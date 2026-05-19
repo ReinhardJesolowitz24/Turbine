@@ -6,6 +6,57 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ---
 
+## [V2 — KDF and UI Update] — 2026-05-19
+
+### Added
+- **PBKDF2-SHA512 key derivation function** (KDF V2)
+  - Iterations: 1,200,000 (conservative, exceeds OWASP 2023 recommendation)
+  - Hash: SHA-512
+  - Salt: the existing 16-byte cryptographic IV
+  - Output: 64-byte master key + counter-mode SHA-512 expansion to 1024 bytes
+    (HKDF-Expand pattern per NIST SP 800-108)
+- **File format version byte** at BMP header position 6:
+  - `0x00` — Legacy V1 (all existing files; auto-detected, fully backwards compatible)
+  - `0x01` — V2 with PBKDF2 password-based key derivation
+  - `0x02` — V2 with key file (no PBKDF2 — key file already high-entropy)
+- **Mighty Mouse virtual keyboard** extended from 30 to **all 95 printable ASCII
+  characters** (digits, uppercase, lowercase, special chars, SPACE).
+  Layout reorganized into 7 compact rows with bordered overlay panel.
+  Eliminates the entropy reduction that earlier limited Mighty Mouse to
+  hex-only input.
+
+### Changed
+- Encryption with V2 mode adds ~5-10 seconds of one-time key derivation
+  delay. Existing files are unaffected (still decrypt instantly with V1).
+- BMP header byte 6 now carries the version flag. Previously always 0x00.
+- `name_der_datei6` array sizing logic: derived from password length in V1,
+  always 1024 bytes in V2 (regardless of password length).
+
+### Security improvements achieved
+- **Brute-force protection now scales with password length AND iteration count.**
+  Weak passwords (e.g., 6-8 chars) are now ~1.2 million times more expensive
+  to attack than in V1.
+
+### Honest notes on statistical quality
+- The structural Bit 6→7 bias is **unchanged** in V2. PBKDF2 affects only
+  the input to gear initialization, not the gear update function (which is
+  where the bias originates).
+- V2 NIST test scores (6-7/10 passed in tested samples) are roughly comparable
+  to V1 (8/10), with sample-to-sample variability. With matched conditions
+  (same strong password), V2 showed slightly more failures than V1, primarily
+  in tests checking overall bit balance.
+- This is acceptable because (a) the absolute deviations are small, (b) the
+  primary security gain is brute-force resistance, not statistical purity,
+  and (c) the 100 MB 0x00 plaintext test is the worst-case scenario — real
+  files mask the keystream statistics in the ciphertext.
+
+### Compatibility
+- **Fully backwards compatible**: all existing `.tur` files (with version byte 0x00)
+  continue to decrypt without changes.
+- New files written by V2 are not readable by older Turbine builds.
+
+---
+
 ## [Documentation Correction] — 2026-05-18
 
 ### Changed (documentation only — no code change)

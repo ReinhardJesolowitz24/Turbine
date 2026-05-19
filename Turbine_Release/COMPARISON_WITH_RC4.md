@@ -90,7 +90,7 @@ point for the WEP attack: short, related keys (as used in WEP's
 | **Documented biases** | Dozens, accumulated over 25 years | One strong (Bit 6↔7), one borderline (Bit 2↔3) |
 | **Bias combinability** | YES — proved to enable practical attacks | **NO** — biases statistically independent (Z = -0.09) |
 | **Cross-byte correlations** | Multiple known (e.g., ABSAB pattern) | **None** — full 8×8 cross-byte matrix is in noise |
-| **Key Scheduling** | Single-step KSA, vulnerable to related-key attacks | Multi-stage iterative mix, no related-key attacks known |
+| **Key Scheduling** | Single-step KSA, vulnerable to related-key attacks | V1: Multi-stage iterative mix. V2 (since 2026-05-19): **PBKDF2-SHA512 with 1,200,000 iterations** as KDF before gear init |
 | **Real-world breaks** | WEP (seconds), TLS-RC4 (hours), many more | None publicly known |
 | **Public peer review** | 25+ years, hundreds of researchers | First external review in 2026 |
 | **Operating mode** | Pure stream (no cross-byte feedback) | **CFB-like with `block_quersumme` feedback** (see CRYPTANALYSIS.md §1.3) |
@@ -181,15 +181,22 @@ practical attacks.
 To be fair: there are areas where Turbine has not (yet) matched the
 2026 state of the art:
 
-### 6.1 No formal Work Factor in key derivation
+### 6.1 Work Factor in key derivation — RESOLVED in Turbine V2
 
-RC4 had this same weakness — its KSA was a single-pass mix.
-Turbine uses a multi-stage iterative mix with several hundred thousand
-iterations, which is better than RC4's KSA, but still not as strong as
-**PBKDF2** (with 600,000 iterations) or **Argon2** (memory-hard).
+RC4 had this weakness — its KSA was a single-pass mix.
+Original Turbine V1 used a multi-stage iterative mix with several hundred
+thousand iterations, which was better than RC4's KSA, but still not as
+strong as **PBKDF2** or **Argon2**.
 
-For a hypothetical Turbine v2: integrating PBKDF2 or Argon2 in front of
-the gear initialization would close this gap entirely.
+**Turbine V2 (released 2026-05-19) integrates PBKDF2-SHA512 with 1,200,000
+iterations** as a proper KDF stage. This eliminates the brute-force-against-
+weak-passwords weakness that RC4 also had. V2 thus addresses one of the two
+main differentiators between RC4 and modern AEAD constructions.
+
+(Historical note: V2 retained the original gear architecture entirely;
+the KDF only changes what feeds into the gear initialization. A hypothetical
+V3 could go further by using Argon2id memory-hard derivation or adding an
+HMAC authentication tag.)
 
 ### 6.2 No authentication tag
 
