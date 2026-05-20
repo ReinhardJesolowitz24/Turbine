@@ -41,8 +41,8 @@ unverdächtig und unauffällig auf der Festplatte.
 
 ## Schnellstart (mit fertiger EXE)
 
-1. `binary/setup_turbine.exe` ausführen und dem Installer folgen
-2. Turbine über das Startmenü starten
+1. `binary/Turbine.exe` (und `Turbine.exe.config`) in einen beliebigen Ordner kopieren
+2. `Turbine.exe` per Doppelklick starten (keine Installation nötig — portabel)
 3. Quelldatei auswählen, Zieldatei (`.tur`-Endung) festlegen, Passwort 2× eingeben
 4. **Encrypt** klicken — fertig
 

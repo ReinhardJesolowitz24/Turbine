@@ -5,7 +5,6 @@
 *.pdb
 *.dll
 !binary/Turbine.exe
-!binary/setup_turbine.exe
 
 # Visual Studio
 .vs/

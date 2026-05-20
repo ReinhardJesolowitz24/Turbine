@@ -39,8 +39,8 @@ naive content filters and looks unremarkable on disk.
 
 ## Quick start (using the pre-built binary)
 
-1. Open `binary/setup_turbine.exe` and follow the installer
-2. Launch Turbine from the Start menu
+1. Copy `binary/Turbine.exe` (and `Turbine.exe.config`) to any folder
+2. Double-click `Turbine.exe` to launch (no installation needed — portable)
 3. Select source file, target file (`.tur` extension), enter a password twice
 4. Click **Encrypt** — done
 
