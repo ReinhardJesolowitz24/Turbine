@@ -50,11 +50,24 @@
         <Button Height="28.632" HorizontalAlignment="Right" Margin="0,16.159,10,0" Name="button4" VerticalAlignment="Top" Width="84" Click="button4_Click" Background="White" ToolTip="General Information and Terms of Use" FontSize="12">Terms of use</Button>
         <PasswordBox Margin="6,0,10,128" Name="textBox3" ToolTip="minimum 6 characters" PasswordChanged="textBox3_PasswordChanged" Height="34" VerticalAlignment="Bottom" MaxLength="1024" Opacity="1" SnapsToDevicePixels="False" ClipToBounds="False" Background="Transparent" BorderBrush="LightBlue" FontSize="18" />
         <PasswordBox Height="34" Margin="4.89,0,11.11,75" Name="textBox4" VerticalAlignment="Bottom" Password="" ToolTip="minimum 6 characters" PasswordChanged="textBox4_PasswordChanged" MaxLength="1025" Background="Transparent" BorderBrush="LightBlue" FontSize="18" />
-        <Label Height="37.774" HorizontalAlignment="Left" Margin="18.681,8.861,0,0" Name="label5" VerticalAlignment="Top" Width="132.209" FontSize="20" Foreground="Black">
+        <!-- 2026-05-20: label5 wird durch zwei BMP-Logos ersetzt (image_logo_normal / image_logo_burning).
+             label5 bleibt zur Sicherheit/Accessibility im Tree, aber unsichtbar (Visibility=Hidden).
+             Falls die BMPs nicht laden, koennte man label5 wieder auf Visible setzen als Fallback. -->
+        <Label Height="37.774" HorizontalAlignment="Left" Margin="18.681,8.861,0,0" Name="label5" VerticalAlignment="Top" Width="132.209" FontSize="20" Foreground="Black" Visibility="Hidden">
             <Label.BitmapEffect>
                 <EmbossBitmapEffect />
             </Label.BitmapEffect> Turbine V5.0
         </Label>
+        <!-- 2026-05-20: Top-Margin von 8.861 auf 15.861 erhoeht (+7 px),
+             damit die Logo-Mitte tiefer sitzt (Feedback "Grafiken_zu_hoch.png"). -->
+        <Image Name="image_logo_normal" HorizontalAlignment="Left" VerticalAlignment="Top"
+               Margin="18.681,15.861,0,0" Width="132.209" Height="37.774"
+               Stretch="Uniform" SnapsToDevicePixels="True"
+               Source="/Turbine;component/turbine_logo.bmp" Visibility="Visible" />
+        <Image Name="image_logo_burning" HorizontalAlignment="Left" VerticalAlignment="Top"
+               Margin="18.681,15.861,0,0" Width="132.209" Height="37.774"
+               Stretch="Uniform" SnapsToDevicePixels="True"
+               Source="/Turbine;component/turbine_logo_burning.bmp" Visibility="Hidden" />
         <TextBox Height="34" Margin="6,0,10,128" Name="textBox5" VerticalAlignment="Bottom" TextChanged="textBox5_TextChanged" IsReadOnly="False" ToolTip="minimum 6 characters" Visibility="Hidden" BorderBrush="LightBlue" FontSize="18" Background="Transparent" />
         <RadioButton Height="25.553" HorizontalAlignment="Left" Margin="10,0,0,193" Name="radioButton1" VerticalAlignment="Bottom" Width="132.209" Checked="radioButton1_Checked_1" FontSize="13" GroupName="Group1" ToolTip="If the key is displayed, the key must not be repeated.">key is visible</RadioButton>
         <RadioButton Height="25.553" Margin="0,0,153,193" Name="radioButton2" VerticalAlignment="Bottom" Checked="radioButton2_Checked" IsChecked="True" FontSize="13" GroupName="Group1" ToolTip="If the key is hidden, it must be repeated." HorizontalAlignment="Right" Width="175.134">key is unvisible</RadioButton>

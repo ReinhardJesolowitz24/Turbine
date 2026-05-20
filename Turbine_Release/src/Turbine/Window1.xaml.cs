@@ -492,6 +492,7 @@ namespace Turbine
                     this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
                     {
                         label5.Foreground = Brushes.Black;
+                        SetBurningLogo(false);
                         // image4 entfernt 2026-05-20 (Tur_effekt2.bmp war V4.1-Overlay)
                     }));
                     fortschritt = 0;
@@ -509,6 +510,7 @@ namespace Turbine
                     this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
                     {
                         label5.Foreground = Brushes.Black;
+                        SetBurningLogo(false);
                         // image4 entfernt 2026-05-20 (Tur_effekt2.bmp war V4.1-Overlay)
                     }));
                 }
@@ -526,6 +528,7 @@ namespace Turbine
                 this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
                 {
                     label5.Foreground = Brushes.Black;
+                    SetBurningLogo(false);
                     // image4 entfernt 2026-05-20 (Tur_effekt2.bmp war V4.1-Overlay)
                 }));
             }
@@ -3686,6 +3689,7 @@ namespace Turbine
                         this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
                         {
                             label5.Foreground = Brushes.Black;
+                            SetBurningLogo(false);
                             // image4 entfernt 2026-05-20 (Tur_effekt2.bmp war V4.1-Overlay)
                             image6.Visibility = Visibility.Hidden;
                             image1.Visibility = Visibility.Visible;
@@ -3770,6 +3774,7 @@ namespace Turbine
                         this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
                         {
                             label5.Foreground = Brushes.Black;
+                            SetBurningLogo(false);
                             // image4 entfernt 2026-05-20 (Tur_effekt2.bmp war V4.1-Overlay)
                             image6.Visibility = Visibility.Hidden;
                             image1.Visibility = Visibility.Visible;
@@ -3831,6 +3836,7 @@ namespace Turbine
                 this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
                 {
                     label5.Foreground = Brushes.Black;
+                    SetBurningLogo(false);
                     // image4 entfernt 2026-05-20 (Tur_effekt2.bmp war V4.1-Overlay)
                     image6.Visibility = Visibility.Hidden;
                     image1.Visibility = Visibility.Visible;
@@ -3872,6 +3878,27 @@ namespace Turbine
         // Verwendung: anstelle von MessageBox.Show(...) -> ShowFg(...)
         // Hintergrund: Nach .NET 3.5 -> 4.8 Migration kamen MessageBoxes aus
         // BackgroundWorker-Threads nicht mehr zuverlaessig in den Vordergrund.
+        // ----------------------------------------------------------------
+        // SetBurningLogo - schaltet zwischen normalem und brennendem Logo um
+        // ----------------------------------------------------------------
+        // 2026-05-20: Ersetzt den frueheren label5.Foreground=Red Trick.
+        // Wird parallel zu den vorhandenen label5.Foreground-Aufrufen aufgerufen,
+        // damit Fallback erhalten bleibt (label5 ist im XAML nur Hidden, nicht entfernt).
+        // Per Dispatcher.Invoke aufrufen, falls aus BackgroundWorker-Thread aufgerufen.
+        private void SetBurningLogo(bool burning)
+        {
+            Action a = new Action(delegate()
+            {
+                if (image_logo_normal != null && image_logo_burning != null)
+                {
+                    image_logo_normal.Visibility  = burning ? System.Windows.Visibility.Hidden  : System.Windows.Visibility.Visible;
+                    image_logo_burning.Visibility = burning ? System.Windows.Visibility.Visible : System.Windows.Visibility.Hidden;
+                }
+            });
+            if (this.Dispatcher.CheckAccess()) a();
+            else this.Dispatcher.Invoke(a);
+        }
+
         private void ShowFg(string text)
         {
             Action a = new Action(delegate()
@@ -4070,6 +4097,7 @@ namespace Turbine
             if (prozess_laueft == false)
             {
                 label5.Foreground = Brushes.Red;
+                SetBurningLogo(true);
                 // image4 entfernt 2026-05-20 (Tur_effekt2.bmp war V4.1-Overlay)
                 image6.Visibility = Visibility.Visible;
                 image1.Visibility = Visibility.Hidden;
@@ -5074,6 +5102,7 @@ namespace Turbine
             if (prozess_laueft == false)
             {
                 label5.Foreground = Brushes.Red;
+                SetBurningLogo(true);
                 // image4 entfernt 2026-05-20 (Tur_effekt2.bmp war V4.1-Overlay)
                 prozess_laueft = true;
                 dateigroesse1 = textBox1.Text;

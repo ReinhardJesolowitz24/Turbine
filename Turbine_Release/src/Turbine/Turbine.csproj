@@ -139,6 +139,11 @@
   <ItemGroup>
     <Resource Include="T9X2.jpg" />
   </ItemGroup>
+  <!-- 2026-05-20: Neue Logo-BMPs fuer "burning"-Effekt (ersetzen den Label-Emboss-Trick) -->
+  <ItemGroup>
+    <Resource Include="turbine_logo.bmp" />
+    <Resource Include="turbine_logo_burning.bmp" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
