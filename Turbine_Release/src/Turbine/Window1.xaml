@@ -1,7 +1,7 @@
 ﻿<Window x:Class="Turbine.Window1"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Title="Encryption Turbine" Height="750" Width="458" Foreground="Silver" Visibility="Collapsed" AllowsTransparency="False" FontSize="11" Loaded="Window_Loaded" WindowStyle="ThreeDBorderWindow" Topmost="False" WindowStartupLocation="CenterScreen" VerticalAlignment="Center" HorizontalAlignment="Center" ResizeMode="CanResizeWithGrip" ShowInTaskbar="True">
+    Title="Turbine V5.0" Height="750" Width="458" Foreground="Silver" Visibility="Collapsed" AllowsTransparency="False" FontSize="11" Loaded="Window_Loaded" WindowStyle="ThreeDBorderWindow" Topmost="False" WindowStartupLocation="CenterScreen" VerticalAlignment="Center" HorizontalAlignment="Center" ResizeMode="CanResizeWithGrip" ShowInTaskbar="True">
 
 
     <Grid Height="700" Width="440" Background="#F0F0F0">
@@ -53,7 +53,7 @@
         <Label Height="37.774" HorizontalAlignment="Left" Margin="18.681,8.861,0,0" Name="label5" VerticalAlignment="Top" Width="132.209" FontSize="20" Foreground="Black">
             <Label.BitmapEffect>
                 <EmbossBitmapEffect />
-            </Label.BitmapEffect> Turbine V4.1
+            </Label.BitmapEffect> Turbine V5.0
         </Label>
         <TextBox Height="34" Margin="6,0,10,128" Name="textBox5" VerticalAlignment="Bottom" TextChanged="textBox5_TextChanged" IsReadOnly="False" ToolTip="minimum 6 characters" Visibility="Hidden" BorderBrush="LightBlue" FontSize="18" Background="Transparent" />
         <RadioButton Height="25.553" HorizontalAlignment="Left" Margin="10,0,0,193" Name="radioButton1" VerticalAlignment="Bottom" Width="132.209" Checked="radioButton1_Checked_1" FontSize="13" GroupName="Group1" ToolTip="If the key is displayed, the key must not be repeated.">key is visible</RadioButton>
@@ -65,7 +65,11 @@
         <Button Height="29" Margin="181.093,65,112.156,0" Name="button5" VerticalAlignment="Top" Click="button5_Click" Background="Yellow" ToolTip="delete Source files secure" FontSize="12">wipe Source file</Button>
         <Image Height="34.632" Margin="146,12.003,0,0" Name="image2" Stretch="Fill" VerticalAlignment="Top" Source="/Turbine;component/turbine.ico" Visibility="Hidden" ImageFailed="image2_ImageFailed" HorizontalAlignment="Left" Width="47.507" />
         <Image Height="34.632" Margin="146,12.003,0,0" Name="image3" Source="/Turbine;component/turbine2.ico" Stretch="Fill" VerticalAlignment="Top" HorizontalAlignment="Left" Width="47.507" />
-        <Image Margin="18.681,12.003,0,0" Name="image4" Stretch="Fill" Height="29" VerticalAlignment="Top" Source="/Turbine;component/Tur_effekt2.bmp" Visibility="Hidden" HorizontalAlignment="Left" Width="125" />
+        <!-- 2026-05-20: image4 (Tur_effekt2.bmp brennende V4.1-Schrift) entfernt.
+             Stattdessen wird der "brennende" Effekt allein durch
+             label5.Foreground=Red + EmbossBitmapEffect erzeugt (im Code).
+             Damit ist der Effekt versions-unabhaengig und zeigt immer den
+             aktuellen Label-Text (V5.0 jetzt, V6.0 spaeter etc.). -->
         <Label HorizontalAlignment="Right" Margin="0,0,19,165" Name="label2" Width="130" FontSize="12" Visibility="Hidden" Foreground="Green" Height="25" VerticalAlignment="Bottom">key file is loaded</Label>
         <Image Margin="206,0,204,169" Name="image5" Stretch="Fill" Source="/Turbine;component/Schloss.JPG" Visibility="Hidden" Height="20" VerticalAlignment="Bottom" />
         <Button Margin="181.093,241,112.156,0" Name="button7" Click="button7_Click" Height="28.945" VerticalAlignment="Top">mighty mouse (optional)</Button>

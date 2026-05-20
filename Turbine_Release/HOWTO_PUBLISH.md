@@ -11,20 +11,13 @@ visibility".
 
 Before publishing, do these one-time steps:
 
-### Replace placeholders
+### Author name in documents
 
-Search and replace the following in **all** documents:
-
-| Placeholder | Replace with |
-|---|---|
-| `<DEIN VOLLER NAME>` | Your full name |
-
-Files containing the placeholder:
-- `LICENSE`
-- `README.md`
-- `README_DE.md`
-
-You can do this with any text editor (Notepad, Notepad++, VS Code, etc.).
+This repository's documents (`LICENSE`, `README.md`, `README_DE.md`)
+already contain the author name **Reinhard Jesolowitz**. If you fork
+this repository to publish a derivative version, search and replace
+this name with your own (any text editor like Notepad, Notepad++, or
+VS Code will do).
 
 ### Verify the package
 

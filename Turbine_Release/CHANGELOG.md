@@ -6,6 +6,67 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ---
 
+## [App version V5.0 — finalization release] — 2026-05-20
+
+This is the **consolidated V5.0 release** of the Turbine application,
+covering all updates since V4.1. File format markers V2 (0x01) and V3 (0x03)
+referenced below are the **cipher format** version bytes inside `.tur` files,
+not the application version number.
+
+### App-version-level changes (visible to user)
+- **Application version bumped from V4.1 to V5.0**:
+  - Title bar: `Turbine V5.0`
+  - UI label: `Turbine V5.0`
+  - About dialog: rewritten with V5.0 description and feature list
+  - Assembly version: `5.0.0.0`
+- **Logo "burning effect" cleanup**:
+  - Removed obsolete `Tur_effekt2.bmp` overlay (which permanently showed "V4.1")
+  - The burning effect now works purely via WPF text rendering
+    (label foreground = red + emboss effect) — version-independent
+  - Result: future version bumps automatically update the burning text too
+
+### UI/UX fixes
+- **Pop-up windows now reliably come to foreground** after encryption,
+  decryption, or any error. Previously (post-.NET 3.5→4.8 migration),
+  MessageBoxes called from BackgroundWorker threads stayed hidden behind
+  other windows. Fixed via central `ShowFg()` helper that marshals to UI
+  thread + Activate() + Topmost trick + Focus() + Owner parameter.
+  Applied to **21 MessageBox call sites** consistently.
+- **Progress bar moves during KDF phase** (previously appeared frozen ~5 seconds).
+  PBKDF2 now runs in a `Task.Run()` while the main DoWork thread polls and
+  reports progress every 500 ms (1% → 8% over 5 seconds).
+- **Progress bar no longer jumps backward** after KDF. Sets
+  `fortschritt_merker = 8` before encryption loop starts, so the encryption
+  loop only reports progress when it exceeds the KDF's 8 %.
+- **Mighty Mouse virtual keyboard** extended from 30 hex characters to
+  **all 95 printable ASCII characters** (added in earlier sub-release, kept).
+- **Debug MessageBox removed** (showed source file path after selection).
+
+### Cipher / KDF improvements (file format)
+All of these are documented in detail in CRYPTANALYSIS.md and
+NIST_TEST_RESULTS.md:
+- **V2 (0x01)**: PBKDF2-SHA512 with 1,200,000 iterations for password mode
+- **V3 (0x03)**: SHA-512 whitening for key-file mode
+- All previous file format markers (0x00, 0x01, 0x02) remain decryptable
+
+### Code organization
+- Code-level comments at lines 2451-2452, 2699-2710 documenting the
+  Bit 6→7 bias source in gear update masks (left unchanged for backward
+  compatibility; would be a V4 cipher change)
+- Operator-precedence parentheses added at lines 1957, 1973, 1989, 2006
+  for readability (no behavior change)
+
+### Statistical study
+- 7-sample NIST Statistical Test Suite study (see NIST_TEST_RESULTS.md):
+  V1, V2 weak/strong password, V2 key-file JPG/ZIP, V3 key-file ZIP/.tur
+- Empirical findings transparently documented including corrected claims
+
+### Build / packaging
+- `binary/Turbine.exe` rebuilt and updated to V5.0
+- Old `Tur_effekt2.bmp` resource removed from project + repository
+
+---
+
 ## [V3 — Key-File Whitening] — 2026-05-19/20
 
 ### Added

@@ -477,7 +477,7 @@ namespace Turbine
 
                     File.Delete(@dateigroesse1);
                     worker2.ReportProgress((int)100);
-                    MessageBox.Show("Secure deletion is completed successfully!");
+                    ShowFg("Secure deletion is completed successfully!");
                     this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
                     {
                         flame_aus();
@@ -492,7 +492,7 @@ namespace Turbine
                     this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
                     {
                         label5.Foreground = Brushes.Black;
-                        image4.Visibility = Visibility.Hidden;
+                        // image4 entfernt 2026-05-20 (Tur_effekt2.bmp war V4.1-Overlay)
                     }));
                     fortschritt = 0;
                     prozess_laueft = false;
@@ -509,7 +509,7 @@ namespace Turbine
                     this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
                     {
                         label5.Foreground = Brushes.Black;
-                        image4.Visibility = Visibility.Hidden;
+                        // image4 entfernt 2026-05-20 (Tur_effekt2.bmp war V4.1-Overlay)
                     }));
                 }
 
@@ -517,7 +517,7 @@ namespace Turbine
 
             catch
             {
-                MessageBox.Show("Deleting not possible! Check file properties and permissions!");
+                ShowFg("Deleting not possible! Check file properties and permissions!");
                 prozess_laueft = false;
                 this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
                 {
@@ -526,7 +526,7 @@ namespace Turbine
                 this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
                 {
                     label5.Foreground = Brushes.Black;
-                    image4.Visibility = Visibility.Hidden;
+                    // image4 entfernt 2026-05-20 (Tur_effekt2.bmp war V4.1-Overlay)
                 }));
             }
 
@@ -894,11 +894,33 @@ namespace Turbine
                 }
 
                 // Schritt 1: Master-Key-Extraktion mit PBKDF2-SHA512 (LANGSAM, einmalig)
-                byte[] master_key;
-                using (var pbkdf2 = new Rfc2898DeriveBytes(passwort1, zufall, 1200000, HashAlgorithmName.SHA512))
+                // PBKDF2 in separatem Task ausfuehren, damit wir parallel Fortschritt melden koennen.
+                // Sonst waere der Balken fuer ~5 Sek bei 1% eingefroren.
+                byte[] master_key = null;
+                var kdf_task = System.Threading.Tasks.Task.Run(() =>
                 {
-                    master_key = pbkdf2.GetBytes(64);
+                    using (var pbkdf2 = new Rfc2898DeriveBytes(passwort1, zufall, 1200000, HashAlgorithmName.SHA512))
+                    {
+                        master_key = pbkdf2.GetBytes(64);
+                    }
+                });
+
+                // Parallel zur PBKDF2-Berechnung: alle 500ms eine Progress-Erhoehung
+                // bis maximal 8% (die eigentliche Verschluesselung laeuft danach von 8% bis 100%)
+                int kdf_progress = 1;
+                while (!kdf_task.IsCompleted)
+                {
+                    System.Threading.Thread.Sleep(500);
+                    if (kdf_progress < 8)
+                    {
+                        kdf_progress++;
+                        if (backgroundWorker1 != null && backgroundWorker1.WorkerReportsProgress)
+                        {
+                            backgroundWorker1.ReportProgress(kdf_progress);
+                        }
+                    }
                 }
+                kdf_task.Wait(); // Sicherstellen dass Task wirklich beendet und Exceptions sichtbar
 
                 // Schritt 2: Expansion auf 1024 Byte mit Counter-Mode SHA-512 (SCHNELL)
                 byte[] expanded = new byte[1024];
@@ -963,6 +985,14 @@ namespace Turbine
                 name_der_datei6 = kf_expanded;
                 passwortgroesse = 1024;
                 gen_passwort = 1024;
+            }
+
+            // Fortschritts-Balken-Sync: Wenn KDF lief (Progress 1-8%), muss der
+            // Verschluesselungs-Loop ab 8% weitermachen (statt bei 0% neu zu starten).
+            // Sonst springt der Balken sichtbar zurueck.
+            if (use_pbkdf2 || use_keyfile_whitening)
+            {
+                fortschritt_merker = 8;
             }
             // ===== Ende KDF V2/V3 =====
 
@@ -1923,13 +1953,13 @@ namespace Turbine
                             if ((dummy_byte1 == 'T') && (dummy_byte2 == 'U') && (dummy_byte3 == 'R') && (dummy_byte4 == 'B') && (dummy_byte5 == 'I') &&
                                 (dummy_byte6 == 'N') && (dummy_byte7 == 'E'))//Ist TURBINE im BMP Header enthalten?
                             {
-                                MessageBox.Show(Turbine_Typ, "After decryption the File Type is:");
+                                ShowFg(Turbine_Typ, "After decryption the File Type is:");
                             }
                             /*else 
                             {
                                 dateiLaenge = 0;
-                                MessageBox.Show("Decryption not possible. File is not a encrypted Turbine-file.");
-                                MessageBox.Show(Turbine_Header, "Wrong Header Information");
+                                ShowFg("Decryption not possible. File is not a encrypted Turbine-file.");
+                                ShowFg(Turbine_Header, "Wrong Header Information");
                                 radioButton3.IsChecked = false;
                                 radioButton3.Foreground = new SolidColorBrush(Colors.Gray);
                                 radioButton3.FontWeight = FontWeights.Normal;
@@ -3635,21 +3665,13 @@ namespace Turbine
 
                         if (richtung_info == 0)
                         {
-                            MessageBox.Show("Encryption is completed successfully!");
+                            ShowFg("Encryption is completed successfully!");
                         }
                         else
                         {
-
-                            if (falsche_datei == 0)
-                            {
-                                MessageBox.Show("Decoding is completed successfully!");
-                            }
-                            else
-                            {
-                                MessageBox.Show("Decoding canceled!");
-                            }
-                            
-                           
+                            ShowFg((falsche_datei == 0)
+                                ? "Decoding is completed successfully!"
+                                : "Decoding canceled!");
                         }
 
 
@@ -3664,7 +3686,7 @@ namespace Turbine
                         this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
                         {
                             label5.Foreground = Brushes.Black;
-                            image4.Visibility = Visibility.Hidden;
+                            // image4 entfernt 2026-05-20 (Tur_effekt2.bmp war V4.1-Overlay)
                             image6.Visibility = Visibility.Hidden;
                             image1.Visibility = Visibility.Visible;
                             /*
@@ -3708,32 +3730,32 @@ namespace Turbine
 
                         if (dateil1 == 0)
                         {
-                            MessageBox.Show("Error: The source file is not selected!");
+                            ShowFg("Error: The source file is not selected!");
                         }
 
                         if (dateil2 == 0)
                         {
-                            MessageBox.Show("Error: The target file is not selected!");
+                            ShowFg("Error: The target file is not selected!");
                         }
 
                         if (passwortgroesse > 1024)
                         {
-                            MessageBox.Show("Error: The Key is too long  (maximum 1024 characters)!");
+                            ShowFg("Error: The Key is too long  (maximum 1024 characters)!");
                         }
 
                         if (passwortgroesse <= 5)
                         {
-                            MessageBox.Show("Error: The Key is too short (minimum 6 characters)!");
+                            ShowFg("Error: The Key is too short (minimum 6 characters)!");
                         }
 
                         if (!(passwort1.Equals(passwort2)) && (!radioButton1_global))
                         {
-                            MessageBox.Show("Error: Keys are not equal!");
+                            ShowFg("Error: Keys are not equal!");
                         }
 
                         if (((dateigroesse1.Equals(dateigroesse2))))
                         {
-                            MessageBox.Show("Error: The source file may not be the target file!");
+                            ShowFg("Error: The source file may not be the target file!");
                         }
 
 
@@ -3748,7 +3770,7 @@ namespace Turbine
                         this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
                         {
                             label5.Foreground = Brushes.Black;
-                            image4.Visibility = Visibility.Hidden;
+                            // image4 entfernt 2026-05-20 (Tur_effekt2.bmp war V4.1-Overlay)
                             image6.Visibility = Visibility.Hidden;
                             image1.Visibility = Visibility.Visible;
 
@@ -3798,7 +3820,7 @@ namespace Turbine
             {
 
 
-                MessageBox.Show("Start not possible! Check file properties and permissions!");
+                ShowFg("Start not possible! Check file properties and permissions!");
                 prozess_laueft = false;
 
 
@@ -3809,7 +3831,7 @@ namespace Turbine
                 this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
                 {
                     label5.Foreground = Brushes.Black;
-                    image4.Visibility = Visibility.Hidden;
+                    // image4 entfernt 2026-05-20 (Tur_effekt2.bmp war V4.1-Overlay)
                     image6.Visibility = Visibility.Hidden;
                     image1.Visibility = Visibility.Visible;
                     /*
@@ -3842,13 +3864,54 @@ namespace Turbine
 
         // This event handler deals with the results of the
         // background operation.
+        // ===== HELPER 2026-05-20 =====
+        // Zentrale Anzeige von MessageBoxen mit:
+        //   1. Marshalling auf den UI-Thread (falls aus Background-Thread aufgerufen)
+        //   2. Window-in-Vordergrund holen (Activate + Topmost-Trick + Focus)
+        //   3. MessageBox mit Owner-Parameter (this) - bleibt modal vor dem Fenster
+        // Verwendung: anstelle von MessageBox.Show(...) -> ShowFg(...)
+        // Hintergrund: Nach .NET 3.5 -> 4.8 Migration kamen MessageBoxes aus
+        // BackgroundWorker-Threads nicht mehr zuverlaessig in den Vordergrund.
+        private void ShowFg(string text)
+        {
+            Action a = new Action(delegate()
+            {
+                if (this.WindowState == System.Windows.WindowState.Minimized)
+                    this.WindowState = System.Windows.WindowState.Normal;
+                this.Activate();
+                this.Topmost = true;
+                this.Topmost = false;
+                this.Focus();
+                MessageBox.Show(this, text);
+            });
+            if (this.Dispatcher.CheckAccess()) a();
+            else this.Dispatcher.Invoke(a);
+        }
+
+        private void ShowFg(string text, string caption)
+        {
+            Action a = new Action(delegate()
+            {
+                if (this.WindowState == System.Windows.WindowState.Minimized)
+                    this.WindowState = System.Windows.WindowState.Normal;
+                this.Activate();
+                this.Topmost = true;
+                this.Topmost = false;
+                this.Focus();
+                MessageBox.Show(this, text, caption);
+            });
+            if (this.Dispatcher.CheckAccess()) a();
+            else this.Dispatcher.Invoke(a);
+        }
+        // ===== Ende HELPER =====
+
         private void backgroundWorker1_RunWorkerCompleted(
             object sender, RunWorkerCompletedEventArgs e)
         {
             // First, handle the case where an exception was thrown.
             if (e.Error != null)
             {
-                MessageBox.Show(e.Error.Message);
+                ShowFg(e.Error.Message);
             }
             else if (e.Cancelled)
             {
@@ -3877,7 +3940,7 @@ namespace Turbine
             // First, handle the case where an exception was thrown.
             if (e.Error != null)
             {
-                MessageBox.Show(e.Error.Message);
+                ShowFg(e.Error.Message);
             }
             else if (e.Cancelled)
             {
@@ -4007,7 +4070,7 @@ namespace Turbine
             if (prozess_laueft == false)
             {
                 label5.Foreground = Brushes.Red;
-                image4.Visibility = Visibility.Visible;
+                // image4 entfernt 2026-05-20 (Tur_effekt2.bmp war V4.1-Overlay)
                 image6.Visibility = Visibility.Visible;
                 image1.Visibility = Visibility.Hidden;
                 /*
@@ -4206,7 +4269,7 @@ namespace Turbine
 
             if (quelldatei != "")
             {
-                MessageBox.Show(quelldatei);
+                // Debug-Anzeige des Pfads entfernt (war Entwicklungs-Hilfe)
                 datei_endung1 = openFileDialog1.SafeFileName;
                 datei_endung_info1 = datei_endung1.IndexOf('.');
                 datei_endung_info2 = (datei_endung1.Length) - (datei_endung_info1+1);
@@ -4293,7 +4356,7 @@ namespace Turbine
                 if ((dummy_byte1 == 'T') && (dummy_byte2 == 'U') && (dummy_byte3 == 'R') && (dummy_byte4 == 'B') && (dummy_byte5 == 'I') &&
                     (dummy_byte6 == 'N') && (dummy_byte7 == 'E'))//Ist TURBINE im BMP Header enthalten?
                 {
-                    MessageBox.Show(Turbine_Typ, "Turbine encrypted file identified! Original File Type is:"); //File ist mit Turbine verschlüsselt worden. Setze entschlüsseln.
+                    ShowFg(Turbine_Typ, "Turbine encrypted file identified! Original File Type is:"); //File ist mit Turbine verschlüsselt worden. Setze entschlüsseln.
                     //radioButton3.IsChecked = true;
                     //radioButton3.Foreground = new SolidColorBrush(Colors.Black);
                     //radioButton3.FontWeight = FontWeights.Heavy;
@@ -4380,14 +4443,27 @@ namespace Turbine
 
             catch
             {
-                MessageBox.Show("Access not possible!");
+                ShowFg("Access not possible!");
             }
 
         }
 
         private void button4_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Turbine 4.0 is an encryption program. The 1280-bit algorithm and the variable block-length guarantees a high level of security.\n\nThe encryption algorithm processes a key length from 6 to 1024 characters.\n\nIt´s not permitted to run the program under the use of any illegal activities, particularly for pornographic, violent or discriminatory purposes.\n\nNote: The program is free software. Use at your own risk! No liability for any consequential damage or data loss!\n");
+            ShowFg("Turbine V5.0 is a free encryption program.\n\n" +
+                "Cipher: 1280-bit internal state across 4 parallel gear groups, stop-go-clocked\n" +
+                "shift register design (related family: Trivium).\n\n" +
+                "Key derivation:\n" +
+                "  V2 - Password mode (PBKDF2-SHA512, 1,200,000 iterations) - format byte 0x01\n" +
+                "  V3 - Key-file mode with SHA-512 whitening - format byte 0x03\n" +
+                "  Legacy modes (0x00, 0x02) remain readable for backward compatibility.\n\n" +
+                "Password length: 6 to 1024 characters.\n" +
+                "Key-file: any file >= 7 KB (photos, archives, or previously encrypted .tur files).\n\n" +
+                "Open source, MIT licensed, no backdoor.\n" +
+                "Source code: https://github.com/ReinhardJesolowitz24/Turbine\n\n" +
+                "This program is NOT to be used for any illegal activities, particularly\n" +
+                "pornographic, violent or discriminatory purposes.\n\n" +
+                "Use at your own risk! No liability for consequential damage or data loss.");
             //MessageBox.Show(datei_endung1);
             //MessageBox.Show(datei_endung2);
             //String[] substrings = value.Split(delimiter)
@@ -4966,7 +5042,7 @@ namespace Turbine
                     }
                     else
                     {
-                        MessageBox.Show("The file is too small (the file must be at least 7 kbyte).");
+                        ShowFg("The file is too small (the file must be at least 7 kbyte).");
 
                     }
 
@@ -4976,7 +5052,7 @@ namespace Turbine
 
                 catch
                 {
-                    MessageBox.Show("Access not possible!");
+                    ShowFg("Access not possible!");
                 }
             }
 
@@ -4998,7 +5074,7 @@ namespace Turbine
             if (prozess_laueft == false)
             {
                 label5.Foreground = Brushes.Red;
-                image4.Visibility = Visibility.Visible;
+                // image4 entfernt 2026-05-20 (Tur_effekt2.bmp war V4.1-Overlay)
                 prozess_laueft = true;
                 dateigroesse1 = textBox1.Text;
                 dateigroesse2 = textBox2.Text;

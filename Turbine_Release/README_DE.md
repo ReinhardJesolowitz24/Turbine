@@ -1,9 +1,14 @@
-# Turbine
+# Turbine V5.0
 
 Ein kostenloses, quelloffenes Werkzeug zur Datei-Verschlüsselung für den
-persönlichen Gebrauch. Ursprünglich 2012 entwickelt von **\<DEIN VOLLER NAME\>**,
+persönlichen Gebrauch. Ursprünglich 2012 entwickelt von **Reinhard Jesolowitz**,
 um persönliche Daten — Passwörter, Login-Dateien, sensible Dokumente — vor
 zufälligem Zugriff zu schützen (z.B. bei einem verlorenen USB-Stick).
+
+**Aktuelle Version: V5.0** (2026-05-20) — mit PBKDF2-SHA512 Schlüssel-Ableitung,
+SHA-512 Schlüsseldatei-Whitening, Mighty Mouse-Tastatur mit allen 95 ASCII-Zeichen
+und vielen UI/UX-Verbesserungen. **Vollständig abwärtskompatibel** zu allen
+früheren Dateiformaten (V1, V2, V3 Marker).
 
 > *English version: see [README.md](README.md).*
 

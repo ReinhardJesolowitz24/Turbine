@@ -135,9 +135,7 @@
   <ItemGroup>
     <Resource Include="turbine.ico" />
   </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Tur_effekt2.bmp" />
-  </ItemGroup>
+  <!-- 2026-05-20: Tur_effekt2.bmp entfernt (war V4.1-Overlay-Grafik, nicht mehr noetig) -->
   <ItemGroup>
     <Resource Include="T9X2.jpg" />
   </ItemGroup>
