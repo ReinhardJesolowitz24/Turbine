@@ -20,6 +20,9 @@ naive content filters and looks unremarkable on disk.
 - **PBKDF2-SHA512 key derivation** (V2, 1,200,000 iterations) —
   makes brute-force attacks ~1.2 million times more expensive for weak
   passwords. Old V1 files remain readable without changes.
+- **Key-file mode with SHA-512 whitening** (V3) — use any file (photo,
+  document, archive) as a 1024-byte cryptographic key. For highest
+  statistical quality, use a previously encrypted .tur file as the key.
 - **Cryptographically random IV** for every file (no two outputs are identical)
 - **Stop-go-clocked shift register** design, structurally related to Trivium
 - **CFB-like cross-block feedback** — any tampering with the ciphertext

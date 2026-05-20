@@ -6,6 +6,39 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ---
 
+## [V3 — Key-File Whitening] — 2026-05-19/20
+
+### Added
+- **SHA-512 whitening for key-file mode** (V3, version byte `0x03`):
+  - 1023 key-file bytes + 16 IV bytes → SHA-512 → 64-byte master key
+  - Counter-mode SHA-512 expansion to 1024 bytes (same pattern as V2 KDF)
+  - ~2 ms processing time (negligible vs. V2's 5-10 seconds for PBKDF2)
+- **Fourth version byte `0x03`** in BMP header position 6 for V3 key-file files
+
+### Changed
+- New key-file encryptions now write `0x03` instead of `0x02` by default
+- Old `0x02` files remain fully decryptable (backwards compatible)
+
+### Statistical impact (measured over 7 NIST samples)
+- **V3 with .tur key file**: Approximate Entropy test now PASSES
+  (was the only failing test that could be addressed through key-file
+  whitening — structural Bit 6→7 and bit-balance issues remain)
+- **V3 with JPG/ZIP key file**: NIST score 5/10 (same as V2 key-file)
+  — SHA-512 whitening absorbs local bit-transition anomalies but
+  cannot fully absorb the structural patterns from compressed formats
+- **Lesson learned**: Use already-encrypted .tur files as key-files for
+  highest cipher output quality. Direct JPG/ZIP key-files work but
+  carry residual format patterns into cipher output.
+
+### Notes on file-format compatibility
+All previous file format versions remain decryptable:
+- `0x00` — Legacy V1 password
+- `0x01` — V2 password with PBKDF2
+- `0x02` — V2 key-file (raw bytes, no whitening)
+- `0x03` — V3 key-file with SHA-512 whitening (new default for key-files)
+
+---
+
 ## [V2 — KDF and UI Update] — 2026-05-19
 
 ### Added

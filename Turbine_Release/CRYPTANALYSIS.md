@@ -338,7 +338,7 @@ personal data), and why practical exploitation would require either:
 
 None of these scenarios fit the "lost USB stick" threat model.
 
-### 2.4 V2 Key File mode (version byte 0x02)
+### 2.4 V2 Key File mode (version byte 0x02 — legacy)
 
 If the user loads a key file (instead of typing a password), the V2
 KDF is **skipped**. Rationale: a 1024-byte key file already provides
@@ -346,6 +346,60 @@ KDF is **skipped**. Rationale: a 1024-byte key file already provides
 add. Running PBKDF2 on high-entropy input does not improve security
 and only adds delay. The version byte `0x02` marks these files for
 correct decryption.
+
+### 2.5 V3 Key File mode with SHA-512 whitening (version byte 0x03)
+
+Added 2026-05-20. After NIST testing showed that V2 key-file mode
+(byte 0x02) fails the Approximate Entropy test on key files derived
+from JPG and ZIP sources, V3 introduces an SHA-512 whitening step:
+
+```
+1023 key-file bytes  +  16-byte IV
+         │
+         ▼
+    SHA-512 hash
+         │
+         ▼
+   64-byte master key
+         │
+         ├──► SHA-512(master_key || 0x00) → 64 bytes
+         ├──► SHA-512(master_key || 0x01) → 64 bytes
+         ├──► ... (16 iterations) ...
+         ▼
+   1024-byte expanded key material
+         │
+         ▼
+   Replaces name_der_datei6 before gear initialization
+```
+
+**Why not PBKDF2 for key files?**
+A 1024-byte key file already provides ~8000 bits of entropy. PBKDF2
+slowness exists to make brute-force expensive. There's no point in
+applying expensive iteration counts to material that cannot be
+brute-forced anyway. SHA-512 (single application + expansion) is
+sufficient for whitening purposes.
+
+**Performance**: V3 whitening adds only ~2 ms to encryption/decryption
+(vs. V2 password mode's 5-10 seconds for PBKDF2).
+
+**Empirical effect on Approximate Entropy test (m=10) on key-file modes:**
+
+| Key file type | V2 (0x02, raw bytes) | V3 (0x03, SHA-512 whitened) |
+|---|---|---|
+| JPG image | FAIL (p=0.0002) | (not separately tested) |
+| ZIP archive of JPGs | FAIL (p=0.00005) | FAIL (p=0.000) |
+| Previously encrypted .tur | (not tested) | **PASS (p=0.026)** ✓ |
+
+The whitening step is most effective when the input is already close
+to random. JPG and ZIP formats carry structural patterns (DCT coefficients,
+Deflate symbols) that survive even SHA-512 whitening when they enter
+the cipher's gear initialization.
+
+**Recommendation for users seeking highest statistical quality:**
+Use a previously encrypted .tur file as the key file, rather than
+raw JPG/ZIP files. This produces the cleanest cipher output measurable
+in the NIST suite (Approximate Entropy passes; only structural Bit 6→7
+and bit-balance issues remain — and those are gear-architecture-bound).
 
 ---
 

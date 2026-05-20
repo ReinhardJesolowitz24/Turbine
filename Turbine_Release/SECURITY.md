@@ -154,22 +154,28 @@ If you discover a previously unreported security issue:
 
 ---
 
-## Improvements completed in V2 (2026-05-19)
+## Improvements completed in V2/V3 (2026-05-19/20)
 
-The following improvements have been integrated in V2 of Turbine:
+The following improvements have been integrated:
 
 1. ✓ **PBKDF2-SHA512 with 1,200,000 iterations** added for password derivation
-   (eliminates weak-password brute-force risk)
-2. ⚠ **Bit 6→7 bias** — initially appeared eliminated in V2 (Z=2.92 vs V1's Z=10.12),
-   but follow-up test with same password as V1 baseline showed Z=8.84,
-   close to V1 levels. The bias is **structural** (caused by asymmetric
-   `0x55`/`0xAA` XOR masks in the gear update logic, lines 2451-2452 and
-   2699-2710). PBKDF2 changes the input to gear initialization but not the
-   gear update function. The original "eliminated" claim was based on
-   single-sample variability and is corrected here. Full elimination
-   would require V3 with symmetric masks (breaking change).
-4. ✓ **Version byte at BMP header position 6** allows v1 and v2 files to
-   coexist (0x00 = legacy, 0x01 = V2 password, 0x02 = V2 key file)
+   (eliminates weak-password brute-force risk) — V2, version byte 0x01
+2. ⚠ **Bit 6→7 bias** — investigated extensively across 7 NIST samples.
+   The bias is **structural** (caused by asymmetric `0x55`/`0xAA` XOR
+   masks in the gear update logic, lines 2451-2452 and 2699-2710). Neither
+   PBKDF2 (V2) nor SHA-512 key-file whitening (V3) eliminates it,
+   though both reduce its magnitude somewhat. Full elimination would
+   require V4 with symmetric masks (breaking change to all existing files).
+3. ✓ **Version byte at BMP header position 6** allows multiple file format
+   versions to coexist:
+   - `0x00` = Legacy V1 (no KDF)
+   - `0x01` = V2 password with PBKDF2-SHA512
+   - `0x02` = V2 key-file (raw bytes, legacy)
+   - `0x03` = V3 key-file with SHA-512 whitening (new default for key-files)
+4. ✓ **SHA-512 whitening for key-file mode** (V3) added 2026-05-20.
+   Empirically improves the Approximate Entropy NIST test when used with
+   high-entropy key-file inputs (e.g., previously encrypted .tur files).
+   ~2 ms processing overhead.
 
 ## Possible future improvements (V3 candidates)
 

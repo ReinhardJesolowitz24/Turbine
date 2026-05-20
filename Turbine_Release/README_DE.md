@@ -21,6 +21,10 @@ unverdächtig und unauffällig auf der Festplatte.
 - **PBKDF2-SHA512 Schlüssel-Ableitung** (V2, 1.200.000 Iterationen) —
   macht Brute-Force-Angriffe ~1,2 Millionen mal teurer bei schwachen
   Passwörtern. Alte V1-Dateien bleiben weiterhin lesbar.
+- **Schlüsseldatei-Modus mit SHA-512-Whitening** (V3) — beliebige Datei
+  (Foto, Dokument, Archiv) als 1024-Byte-Schlüssel verwendbar. Für höchste
+  statistische Qualität empfiehlt sich eine bereits verschlüsselte
+  .tur-Datei als Schlüsseldatei.
 - **Kryptografisch zufälliger IV** für jede Datei (keine zwei Outputs identisch)
 - **Stop-Go-getakteter Schieberegister-Cipher**, strukturell verwandt mit Trivium
 - **CFB-ähnliche Block-Verkettung** — jede Manipulation am Chiffretext
