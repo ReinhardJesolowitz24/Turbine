@@ -41,14 +41,18 @@ unverdächtig und unauffällig auf der Festplatte.
 
 ## Schnellstart (mit fertiger EXE)
 
-1. `binary/Turbine.exe` (und `Turbine.exe.config`) in einen beliebigen Ordner kopieren
-2. `Turbine.exe` per Doppelklick starten (keine Installation nötig — portabel)
+**Direkter Download:** [Turbine.exe (V5.0, ~292 KB)](https://github.com/ReinhardJesolowitz24/Turbine/releases/download/V5.0/Turbine.exe)
+
+1. `Turbine.exe` in einen beliebigen Ordner speichern
+2. Per Doppelklick starten (keine Installation nötig — portabel)
 3. Quelldatei auswählen, Zieldatei (`.tur`-Endung) festlegen, Passwort 2× eingeben
 4. **Encrypt** klicken — fertig
 
 Zum Entschlüsseln: Gleicher Ablauf, mit **Decrypt** und demselben Passwort.
 
 **Voraussetzung:** Windows + .NET Framework 4.8 (bei Windows 10/11 bereits installiert).
+
+> *Alternativ kannst du das gesamte Repository klonen oder den Quellcode-ZIP von der [Releases-Seite](https://github.com/ReinhardJesolowitz24/Turbine/releases/tag/V5.0) laden — die Binärdatei liegt zusätzlich unter `Turbine_Release/binary/`.*
 
 ---
 

@@ -39,14 +39,18 @@ naive content filters and looks unremarkable on disk.
 
 ## Quick start (using the pre-built binary)
 
-1. Copy `binary/Turbine.exe` (and `Turbine.exe.config`) to any folder
-2. Double-click `Turbine.exe` to launch (no installation needed — portable)
+**Direct download:** [Turbine.exe (V5.0, ~292 KB)](https://github.com/ReinhardJesolowitz24/Turbine/releases/download/V5.0/Turbine.exe)
+
+1. Save `Turbine.exe` to any folder
+2. Double-click to launch (no installation needed — portable)
 3. Select source file, target file (`.tur` extension), enter a password twice
 4. Click **Encrypt** — done
 
 To decrypt: same procedure, with **Decrypt** selected and the original password.
 
 **Requires:** Windows + .NET Framework 4.8 (already installed on Windows 10/11).
+
+> *Alternatively, you can clone the whole repository or download the source-code ZIP from the [Releases page](https://github.com/ReinhardJesolowitz24/Turbine/releases/tag/V5.0) — the binary is also included under `Turbine_Release/binary/`.*
 
 ---
 
