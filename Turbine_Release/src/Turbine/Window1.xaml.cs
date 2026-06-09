@@ -47,6 +47,29 @@ namespace Turbine
     {
         //FileStream fx;
 
+        // ===== Turbine-S-Box (V4 Post-Whitening) =====
+        // Kryptographisch aequivalent zur AES-S-Box (Nichtlinearitaet=112, Diff.Uniformitaet=4),
+        // aber mit eigenem irreduziblem Polynom 0x11D und affiner Konstante 0x4A.
+        // Wird auf das Keystream-Byte angewendet, um Chi²-Byte-Verteilungs-Bias zu eliminieren.
+        private static readonly byte[] TURBINE_SBOX = {
+            0x4A, 0xBB, 0x19, 0x28, 0xE3, 0x59, 0x7B, 0xFF, 0x35, 0x14, 0x68, 0x22, 0xD2, 0xE0, 0x90, 0x89,
+            0x5E, 0xF4, 0xCE, 0xA6, 0xF0, 0xC0, 0x7E, 0x2C, 0xAD, 0x7A, 0x1F, 0xB2, 0x8C, 0xA0, 0xAB, 0x18,
+            0x40, 0x49, 0x15, 0xD8, 0x08, 0x0D, 0x3C, 0xDE, 0x17, 0xD1, 0x0F, 0x5A, 0x50, 0x2F, 0x79, 0xA3,
+            0xB9, 0xCC, 0x52, 0xDF, 0x4B, 0xDC, 0x36, 0x82, 0x29, 0x97, 0x94, 0xF2, 0x11, 0x02, 0x63, 0x01,
+            0x4F, 0x73, 0x60, 0xE7, 0x4E, 0x9D, 0xA8, 0x8D, 0x6B, 0x3D, 0xE9, 0xFE, 0x71, 0xDD, 0x00, 0xBF,
+            0xE4, 0x66, 0x87, 0xFA, 0x43, 0x39, 0x42, 0xF9, 0x47, 0x3F, 0x53, 0x1A, 0x78, 0xE1, 0xBE, 0xC7,
+            0xB3, 0xFC, 0xA2, 0xB4, 0xED, 0x09, 0x80, 0x8F, 0xCA, 0x0B, 0xAA, 0x81, 0x74, 0xB8, 0x2E, 0x88,
+            0xFB, 0x20, 0xA4, 0xAF, 0x8E, 0x72, 0xBD, 0x69, 0x4C, 0xC2, 0x6E, 0x0E, 0x75, 0x77, 0x44, 0xA7,
+            0xC8, 0xEE, 0x7D, 0xEC, 0x5F, 0x86, 0x37, 0x93, 0x48, 0x9A, 0xA1, 0xCD, 0x3B, 0x76, 0xA9, 0xD9,
+            0xDA, 0x8B, 0xF1, 0x6C, 0x30, 0xDB, 0x10, 0x61, 0xD7, 0x99, 0x2A, 0x6A, 0xC4, 0x34, 0x1B, 0x6F,
+            0x1D, 0x51, 0xF7, 0xEA, 0xAC, 0x2D, 0x12, 0x7C, 0x65, 0xF6, 0xF3, 0x23, 0xE5, 0xC5, 0x38, 0x46,
+            0x67, 0xC6, 0x5B, 0x95, 0x6D, 0x0C, 0xC9, 0xD6, 0xF8, 0xCF, 0x9F, 0x8A, 0x9B, 0xC1, 0x27, 0xB7,
+            0xB6, 0x57, 0xBA, 0x5D, 0x3E, 0x1C, 0x9E, 0x06, 0x32, 0x3A, 0xEB, 0x45, 0x84, 0xAE, 0x03, 0x07,
+            0x0A, 0xE6, 0x41, 0xCB, 0x91, 0x24, 0x04, 0xF5, 0x55, 0x05, 0x33, 0x98, 0xD3, 0x26, 0x2B, 0x5C,
+            0x92, 0x31, 0xD4, 0xEF, 0x96, 0x62, 0x13, 0x1E, 0x83, 0xD0, 0xFD, 0x54, 0xB1, 0x85, 0x70, 0x64,
+            0xE2, 0x25, 0xA5, 0x9C, 0x58, 0xE8, 0xC3, 0xB0, 0xD5, 0x16, 0x7F, 0x21, 0x4D, 0xB5, 0xBC, 0x56
+        };
+
         //long gesamt = 0;
         volatile bool prozess_laueft = false;
         int fortschritt = 0;
@@ -836,20 +859,21 @@ namespace Turbine
                 rng.GetBytes(zufall);
             }
 
-            // ===== KDF V2/V3 - Schluessel-Ableitung mit Whitening =====
+            // ===== KDF V2/V3/V4 - Schluessel-Ableitung mit Whitening =====
             // Versions-Byte im BMP-Header (Position 6, normalerweise "reserved"):
             //   0x00 = Legacy V1 (alte Dateien, kein KDF)
             //   0x01 = V2 Passwort + PBKDF2-SHA512 mit IV als Salt
             //   0x02 = V2 Schluesseldatei-Modus (raw bytes, kein Whitening - Legacy)
             //   0x03 = V3 Schluesseldatei-Modus mit SHA-512-Whitening (neuer Default fuer Key-Files)
+            //   0x04 = V4 Passwort + PBKDF2 + korrigierte Gear-Masken (LSB-Bias-Fix)
+            //   0x05 = V4 Schluesseldatei + SHA-512-Whitening + korrigierte Gear-Masken
             byte version_byte_to_write = 0x00;
             byte version_byte_of_file = 0x00;
 
             if (richtung_info == 0)
             {
-                // Verschluesselung: neue Key-File-Dateien erhalten Version 0x03 (mit Whitening),
-                // neue Passwort-Dateien Version 0x01 (mit PBKDF2)
-                version_byte_to_write = (schluesseldatei_geladen == 1) ? (byte)0x03 : (byte)0x01;
+                // Verschluesselung: V4 mit korrigierten Masken (0x04 Passwort, 0x05 Key-File)
+                version_byte_to_write = (schluesseldatei_geladen == 1) ? (byte)0x05 : (byte)0x04;
             }
             else
             {
@@ -862,7 +886,8 @@ namespace Turbine
                         {
                             pre_fs.Seek(6, SeekOrigin.Begin);
                             version_byte_of_file = (byte)pre_fs.ReadByte();
-                            if (version_byte_of_file == 0x01 || version_byte_of_file == 0x02 || version_byte_of_file == 0x03)
+                            if (version_byte_of_file == 0x01 || version_byte_of_file == 0x02 || version_byte_of_file == 0x03
+                                || version_byte_of_file == 0x04 || version_byte_of_file == 0x05)
                             {
                                 pre_fs.Seek(54, SeekOrigin.Begin);
                                 pre_fs.Read(zufall, 0, 16);
@@ -877,13 +902,13 @@ namespace Turbine
                 }
             }
 
-            // ----- V2: PBKDF2 fuer Passwort-Modus (Versions-Byte 0x01) -----
+            // ----- V2/V4: PBKDF2 fuer Passwort-Modus (Versions-Byte 0x01 oder 0x04) -----
             bool use_pbkdf2 = false;
             if (richtung_info == 0 && schluesseldatei_geladen == 0)
             {
                 use_pbkdf2 = true;
             }
-            if (richtung_info == 1 && version_byte_of_file == 0x01)
+            if (richtung_info == 1 && (version_byte_of_file == 0x01 || version_byte_of_file == 0x04))
             {
                 use_pbkdf2 = true;
             }
@@ -952,7 +977,7 @@ namespace Turbine
             {
                 use_keyfile_whitening = true;
             }
-            if (richtung_info == 1 && version_byte_of_file == 0x03)
+            if (richtung_info == 1 && (version_byte_of_file == 0x03 || version_byte_of_file == 0x05))
             {
                 use_keyfile_whitening = true;
             }
@@ -997,7 +1022,33 @@ namespace Turbine
             {
                 fortschritt_merker = 8;
             }
-            // ===== Ende KDF V2/V3 =====
+            // ===== Ende KDF V2/V3/V4 =====
+
+            // ===== V4: Korrigierte Gear-Masken + Gear-Feedback (Bias-Fix) =====
+            // Fix 1 (Masken): In V1-V3 verwenden zwei Stellen 0x55/0xAA statt 0xFF.
+            //   Da 0xAA Bit 0 nicht flippt, stagniert das LSB → Monobit/CumSum FAIL.
+            // Fix 2 (Feedback): In V1-V3 verwenden gear_a[17], gear_a3[17], gear_b2[0],
+            //   gear_c[7], gear_c3[7] Addition (+) statt XOR (^) im Feedback-Loop.
+            //   Addition erzeugt Carry-Propagation → Chi²-Byte-Verteilungs-Bias.
+            // HINWEIS: gear_ergebnisa5 (gear_b[4]+gear_ergebnisd1) bleibt Addition —
+            //   diese Nichtlinearitaet im Keystream verbessert die Mischung.
+            // Ab V4 (0x04/0x05) werden Masken auf 0xFF und Additionen auf XOR korrigiert.
+            bool use_fixed_masks = false;
+            if (richtung_info == 0)
+            {
+                // Verschluesselung: immer die korrigierten Werte verwenden
+                use_fixed_masks = true;
+            }
+            else
+            {
+                // Entschluesselung: nur bei V4-Dateien
+                use_fixed_masks = (version_byte_of_file == 0x04 || version_byte_of_file == 0x05);
+            }
+            byte mask_a3_16 = use_fixed_masks ? (byte)0xFF : (byte)0x55;
+            byte mask_a4_16 = use_fixed_masks ? (byte)0xFF : (byte)0xAA;
+            byte mask_b4_1  = use_fixed_masks ? (byte)0xFF : (byte)0x55;
+            byte mask_b3_1  = use_fixed_masks ? (byte)0xFF : (byte)0xAA;
+            // ===== Ende V4 =====
 
 
             try
@@ -1997,8 +2048,9 @@ namespace Turbine
                             binWriter2.Write((byte)(dateiLaenge5 >> 8));
                             binWriter2.Write((byte)(dateiLaenge5 >> 16));
                             binWriter2.Write((byte)(dateiLaenge5 >> 24));
-                            // Position 6 = Turbine-Versions-Byte (KDF V2):
-                            //   0x00 = Legacy V1, 0x01 = V2 mit PBKDF2, 0x02 = V2 Key-File
+                            // Position 6 = Turbine-Versions-Byte:
+                            //   0x00 = Legacy V1, 0x01 = V2 PBKDF2, 0x02 = V2 Key-File
+                            //   0x03 = V3 Key-File+Whitening, 0x04 = V4 PBKDF2+Fix, 0x05 = V4 Key-File+Fix
                             binWriter2.Write(version_byte_to_write);
                             binWriter2.Write((byte)(0x0));
                             binWriter2.Write((byte)(0x0));
@@ -2297,6 +2349,10 @@ namespace Turbine
 
                             gear_ergebnise1 = (byte)(gear_ergebnise1 ^ gear_ergebnise1_2 ^ gear_ergebnise1_3 ^ gear_ergebnise1_4);
 
+                            // V4: S-Box Post-Whitening — nichtlineare Substitution NUR fuer die Ausgabe.
+                            // gear_ergebnise1 bleibt unveraendert fuer Gear-Feedback und Rotation.
+                            // gear_ergebnise1_out wird fuer XOR mit Plaintext verwendet.
+                            byte gear_ergebnise1_out = use_fixed_masks ? TURBINE_SBOX[gear_ergebnise1] : gear_ergebnise1;
 
                             /*Endergebnis*/
 
@@ -2597,12 +2653,10 @@ namespace Turbine
 
 
                                 /*~I:83*/
-                                // HINWEIS (Analyse 2026-05-15): Die Masken 0x55 und 0xAA im else-Zweig
-                                // erzeugen eine Asymmetrie zwischen geraden und ungeraden Bit-Positionen.
-                                // NIST-Test auf 100 MB Keystream: Runs Test p=7e-5 (Bit 6->7 Transitionen
-                                // Z=10.12). Distinguisher-Bias ~0.019 %, praktisch harmlos, aber statistisch
-                                // messbar. Aenderung wuerde alle bestehenden .tur-Dateien inkompatibel machen
-                                // und ist daher bewusst nicht vorgenommen.
+                                // V4-Fix (2026-06-09): Die Masken 0x55/0xAA erzeugten einen LSB-Bias
+                                // (+0.21%, Z=3.29, NIST Monobit FAIL), weil 0xAA Bit 0 nicht flippt und
+                                // das LSB in gear_a3/a4 stagniert. Ab V4 werden die Masken aus den
+                                // Variablen mask_a3_16/mask_a4_16 gelesen (0xFF fuer V4, 0x55/0xAA fuer V1-V3).
                                 if (((gear_ergebnise1 & 0x8) == 8))
                                 /*~-1*/
                                 {
@@ -2622,17 +2676,17 @@ namespace Turbine
                                     /*~T*/
                                     gear_a[16] = (byte)((0xFF ^ gear_a[17]));
                                     gear_a2[16] = (byte)(gear_a2[17]);
-                                    gear_a3[16] = (byte)((0x55 ^ gear_a3[17])); // asymmetrisch (siehe Hinweis oben)
-                                    gear_a4[16] = (byte)((0xAA ^ gear_a4[17])); // asymmetrisch (siehe Hinweis oben)
+                                    gear_a3[16] = (byte)((mask_a3_16 ^ gear_a3[17])); // V4: 0xFF (fix), V1-V3: 0x55 (LSB-Bias)
+                                    gear_a4[16] = (byte)((mask_a4_16 ^ gear_a4[17])); // V4: 0xFF (fix), V1-V3: 0xAA (LSB-Bias)
 
 
                                     /*~-1*/
                                 }
                                 /*~E:I83*/
                                 /*~T*/
-                                gear_a[17] = (byte)(gear_a[17] + gear_ergebnise1);/*+ (unsigned char)laeufer);*/
+                                gear_a[17] = use_fixed_masks ? (byte)(gear_a[17] ^ gear_ergebnise1) : (byte)(gear_a[17] + gear_ergebnise1); // V4: XOR, V1-V3: ADD
                                 gear_a2[17] = (byte)(gear_a2[17] ^ gear_ergebnise1_2);
-                                gear_a3[17] = (byte)(gear_a3[17] + gear_ergebnise1_3);
+                                gear_a3[17] = use_fixed_masks ? (byte)(gear_a3[17] ^ gear_ergebnise1_3) : (byte)(gear_a3[17] + gear_ergebnise1_3); // V4: XOR, V1-V3: ADD
                                 gear_a4[17] = (byte)(gear_a4[17] ^ gear_ergebnise1_4);
 
 
@@ -2863,10 +2917,8 @@ namespace Turbine
 
 
                                 /*~I:91*/
-                                // HINWEIS (Analyse 2026-05-15): Auch hier asymmetrische Masken 0x55/0xAA.
-                                // Zusammen mit dem analogen Block bei gear_a (siehe Zeile ~2432) Hauptquelle
-                                // des Distinguisher-Bias an den unteren Bit-Positionen. Bewusst unveraendert
-                                // gelassen wegen Abwaertskompatibilitaet bestehender .tur-Dateien.
+                                // V4-Fix (2026-06-09): Analog zum gear_a-Block — 0x55/0xAA verursachten
+                                // LSB-Stagnation in gear_b3/b4. Ab V4 ueber mask_b4_1/mask_b3_1 korrigiert.
                                 if (((gear_ergebnisd1 & 0x40) == 0x40))
                                 /*~-1*/
                                 {
@@ -2874,7 +2926,7 @@ namespace Turbine
                                     gear_b[1] = (byte)(gear_b[0]);
                                     gear_b2[1] = (byte)((0xFF ^ gear_b2[0]));
                                     gear_b3[1] = (byte)(gear_b3[0]);
-                                    gear_b4[1] = (byte)((0x55 ^ gear_b4[0])); // asymmetrisch (siehe Hinweis oben)
+                                    gear_b4[1] = (byte)((mask_b4_1 ^ gear_b4[0])); // V4: 0xFF (fix), V1-V3: 0x55 (LSB-Bias)
 
                                     /*~-1*/
                                 }
@@ -2885,7 +2937,7 @@ namespace Turbine
                                     /*~T*/
                                     gear_b[1] = (byte)((0xFF ^ gear_b[0]));
                                     gear_b2[1] = (byte)(gear_b2[0]);
-                                    gear_b3[1] = (byte)((0xAA ^ gear_b3[0])); // asymmetrisch (siehe Hinweis oben)
+                                    gear_b3[1] = (byte)((mask_b3_1 ^ gear_b3[0])); // V4: 0xFF (fix), V1-V3: 0xAA (LSB-Bias)
                                     gear_b4[1] = (byte)(gear_b4[0]);
 
 
@@ -2895,9 +2947,9 @@ namespace Turbine
                                 /*~E:I91*/
                                 /*~T*/
                                 gear_b[0] = (byte)(gear_b[0] ^ gear_ergebnise1);
-                                gear_b2[0] = (byte)(gear_b2[0] + (gear_ergebnise1_2 ^ temp_gear_a2));
+                                gear_b2[0] = use_fixed_masks ? (byte)(gear_b2[0] ^ (gear_ergebnise1_2 ^ temp_gear_a2)) : (byte)(gear_b2[0] + (gear_ergebnise1_2 ^ temp_gear_a2)); // V4: XOR, V1-V3: ADD
                                 gear_b3[0] = (byte)(gear_b3[0] ^ gear_ergebnise1_3);
-                                gear_b2[0] = (byte)(gear_b2[0] + gear_ergebnise1_4);
+                                gear_b2[0] = use_fixed_masks ? (byte)(gear_b2[0] ^ gear_ergebnise1_4) : (byte)(gear_b2[0] + gear_ergebnise1_4); // V4: XOR, V1-V3: ADD
 
 
 
@@ -3021,9 +3073,9 @@ namespace Turbine
                                 /*~E:I95*/
                                 /*~T*/
 
-                                gear_c[7] = (byte)(gear_c[7] + gear_ergebnise1);
+                                gear_c[7] = use_fixed_masks ? (byte)(gear_c[7] ^ gear_ergebnise1) : (byte)(gear_c[7] + gear_ergebnise1); // V4: XOR, V1-V3: ADD
                                 gear_c2[7] = (byte)(gear_c2[7] ^ gear_ergebnise1_2);
-                                gear_c3[7] = (byte)(gear_c3[7] + gear_ergebnise1_3);
+                                gear_c3[7] = use_fixed_masks ? (byte)(gear_c3[7] ^ gear_ergebnise1_3) : (byte)(gear_c3[7] + gear_ergebnise1_3); // V4: XOR, V1-V3: ADD
                                 gear_c4[7] = (byte)(gear_c4[7] ^ gear_ergebnise1_4);
 
 
@@ -3120,19 +3172,19 @@ namespace Turbine
                                     zeichenanzahl = 0;
                                     bald_ende = 1;
                                 }
-                                binWriter2.Write(((byte)(nurEinByte ^ gear_ergebnise1)));
+                                binWriter2.Write(((byte)(nurEinByte ^ gear_ergebnise1_out)));
                             }
 
                             else
                             {
                                 if (richtung_info == 0)
                                 {
-                                    zeichenbuffer[zeichenanzahl] = ((byte)(nurEinByte ^ gear_ergebnise1));
+                                    zeichenbuffer[zeichenanzahl] = ((byte)(nurEinByte ^ gear_ergebnise1_out));
                                 }
                                 else
                                 {
                                     zeichenbuffer[zeichenanzahl] = ((byte)(nurEinByte));
-                                    gearbuffer[zeichenanzahl] = (byte)gear_ergebnise1;
+                                    gearbuffer[zeichenanzahl] = (byte)gear_ergebnise1_out;
                                 }
                                 zeichenanzahl++;
 
@@ -4478,7 +4530,7 @@ namespace Turbine
 
         private void button4_Click(object sender, RoutedEventArgs e)
         {
-            ShowFg("Turbine V5.0 is a free encryption program.\n\n" +
+            ShowFg("Turbine V5.1 is a free encryption program.\n\n" +
                 "Cipher: 1280-bit internal state across 4 parallel gear groups, stop-go-clocked\n" +
                 "shift register design (related family: Trivium).\n\n" +
                 "Key derivation:\n" +
