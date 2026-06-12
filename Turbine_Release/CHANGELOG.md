@@ -6,6 +6,71 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ---
 
+## [V5.2 — Key Generation Improvements] — 2026-06-12
+
+### Improved key generation quality (version bytes `0x06` / `0x07`)
+
+Three targeted optimizations to the password-based key generation that
+eliminate a measurable byte-distribution bias (Chi-Squared test) previously
+observable with very short, purely numeric passwords like `123456`:
+
+1. **Password-info-byte calculation rewritten** (V5.2 mode only):
+   - Removed right-shift operations (`>> 3,4,5,7,8`) that produced near-zero
+     bytes for short passwords (e.g., `>> 7` on a 6-character password yields
+     only 1 bit of information)
+   - Replaced with chaining and XOR 0xFF inversions that preserve full
+     8-bit entropy regardless of password length
+
+2. **Shift register seeding** (V5.2 mode only):
+   - The five `temp_passwort_gen` variables and the first element of each
+     of the four key generation vectors (`passwort_gen_vector` 1–4) are now
+     pre-initialized with password-derived info bytes
+   - Previously all started at 0x00, causing the first iterations to produce
+     weak output ("cold start" problem)
+   - Each vector uses a different permutation of info bytes to avoid
+     identical initial states
+
+3. **Bit rotation replaces left-shift** (V5.2 mode only):
+   - `temp_passwort_gen3 << 3` → `(temp_passwort_gen3 << 3) | (temp_passwort_gen3 >> 5)`
+   - `temp_passwort_gen3 << 2` → `(temp_passwort_gen3 << 2) | (temp_passwort_gen3 >> 6)`
+   - Left-shift discards 2–3 bits per iteration and fills with zeros;
+     over millions of iterations this accumulates into a systematic bias
+   - Rotation preserves all bit information — no data loss per round
+
+### Measured impact (NIST SP 800-22, 10 MB all-zeros, password `123456`)
+
+| Version | Chi-Squared p-value | Result |
+|---------|:---:|:---:|
+| V5.1 (before) | 0.0000001 | FAIL (16/17) |
+| V5.2 (after) | 0.092 | **PASS (17/17)** |
+
+With a strong password (e.g., `123Test(x)456ARBq`), both V5.1 and V5.2
+score 17/17 — the improvements specifically help the worst case.
+
+### Important: password strength still matters
+
+Passing all 17 NIST tests does **not** make a weak password secure.
+NIST tests measure the statistical quality of the cipher output, not the
+resistance against brute-force or dictionary attacks. The password `123456`
+has only 10^6 possible combinations and will be cracked in milliseconds
+regardless of NIST scores. Always use passwords with at least 12 characters
+mixing uppercase, lowercase, digits, and special characters — or use a
+passphrase of 5–6 unrelated words (25+ characters).
+
+### Backward compatibility
+
+- All previous file formats (`0x00`–`0x05`) remain fully decryptable
+- New encryptions write version byte `0x06` (password) or `0x07` (key-file)
+- The three optimizations are guarded by the `use_improved_pw_info` flag
+  and only activate for V5.2 files
+
+### Other changes
+- Window title, UI label, About dialog: V5.1 → V5.2
+- Assembly version: 5.1.0.0 → 5.2.0.0
+- Updated logo graphics
+
+---
+
 ## [App version V5.0 — finalization release] — 2026-05-20
 
 This is the **consolidated V5.0 release** of the Turbine application,

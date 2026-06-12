@@ -859,7 +859,7 @@ namespace Turbine
                 rng.GetBytes(zufall);
             }
 
-            // ===== KDF V2/V3/V4 - Schluessel-Ableitung mit Whitening =====
+            // ===== KDF V2/V3/V4/V5.2 - Schluessel-Ableitung mit Whitening =====
             // Versions-Byte im BMP-Header (Position 6, normalerweise "reserved"):
             //   0x00 = Legacy V1 (alte Dateien, kein KDF)
             //   0x01 = V2 Passwort + PBKDF2-SHA512 mit IV als Salt
@@ -867,13 +867,15 @@ namespace Turbine
             //   0x03 = V3 Schluesseldatei-Modus mit SHA-512-Whitening (neuer Default fuer Key-Files)
             //   0x04 = V4 Passwort + PBKDF2 + korrigierte Gear-Masken (LSB-Bias-Fix)
             //   0x05 = V4 Schluesseldatei + SHA-512-Whitening + korrigierte Gear-Masken
+            //   0x06 = V5.2 Passwort + verbesserte Passwort-Info-Bytes (Verkettung, kein Shift)
+            //   0x07 = V5.2 Schluesseldatei + verbesserte Passwort-Info-Bytes
             byte version_byte_to_write = 0x00;
             byte version_byte_of_file = 0x00;
 
             if (richtung_info == 0)
             {
-                // Verschluesselung: V4 mit korrigierten Masken (0x04 Passwort, 0x05 Key-File)
-                version_byte_to_write = (schluesseldatei_geladen == 1) ? (byte)0x05 : (byte)0x04;
+                // Verschluesselung: V5.2 mit verbesserten Passwort-Info-Bytes (0x06 Passwort, 0x07 Key-File)
+                version_byte_to_write = (schluesseldatei_geladen == 1) ? (byte)0x07 : (byte)0x06;
             }
             else
             {
@@ -887,7 +889,8 @@ namespace Turbine
                             pre_fs.Seek(6, SeekOrigin.Begin);
                             version_byte_of_file = (byte)pre_fs.ReadByte();
                             if (version_byte_of_file == 0x01 || version_byte_of_file == 0x02 || version_byte_of_file == 0x03
-                                || version_byte_of_file == 0x04 || version_byte_of_file == 0x05)
+                                || version_byte_of_file == 0x04 || version_byte_of_file == 0x05
+                                || version_byte_of_file == 0x06 || version_byte_of_file == 0x07)
                             {
                                 pre_fs.Seek(54, SeekOrigin.Begin);
                                 pre_fs.Read(zufall, 0, 16);
@@ -902,13 +905,13 @@ namespace Turbine
                 }
             }
 
-            // ----- V2/V4: PBKDF2 fuer Passwort-Modus (Versions-Byte 0x01 oder 0x04) -----
+            // ----- V2/V4/V5.2: PBKDF2 fuer Passwort-Modus (Versions-Byte 0x01, 0x04 oder 0x06) -----
             bool use_pbkdf2 = false;
             if (richtung_info == 0 && schluesseldatei_geladen == 0)
             {
                 use_pbkdf2 = true;
             }
-            if (richtung_info == 1 && (version_byte_of_file == 0x01 || version_byte_of_file == 0x04))
+            if (richtung_info == 1 && (version_byte_of_file == 0x01 || version_byte_of_file == 0x04 || version_byte_of_file == 0x06))
             {
                 use_pbkdf2 = true;
             }
@@ -977,7 +980,7 @@ namespace Turbine
             {
                 use_keyfile_whitening = true;
             }
-            if (richtung_info == 1 && (version_byte_of_file == 0x03 || version_byte_of_file == 0x05))
+            if (richtung_info == 1 && (version_byte_of_file == 0x03 || version_byte_of_file == 0x05 || version_byte_of_file == 0x07))
             {
                 use_keyfile_whitening = true;
             }
@@ -1041,14 +1044,29 @@ namespace Turbine
             }
             else
             {
-                // Entschluesselung: nur bei V4-Dateien
-                use_fixed_masks = (version_byte_of_file == 0x04 || version_byte_of_file == 0x05);
+                // Entschluesselung: nur bei V4/V5.2-Dateien
+                use_fixed_masks = (version_byte_of_file == 0x04 || version_byte_of_file == 0x05
+                                || version_byte_of_file == 0x06 || version_byte_of_file == 0x07);
             }
             byte mask_a3_16 = use_fixed_masks ? (byte)0xFF : (byte)0x55;
             byte mask_a4_16 = use_fixed_masks ? (byte)0xFF : (byte)0xAA;
             byte mask_b4_1  = use_fixed_masks ? (byte)0xFF : (byte)0x55;
             byte mask_b3_1  = use_fixed_masks ? (byte)0xFF : (byte)0xAA;
             // ===== Ende V4 =====
+
+            // ===== V5.2: Verbesserte Passwort-Info-Bytes =====
+            // Fix: Rechts-Shifts (>> 3..7) erzeugten bei kurzen Passwoertern zu viele Nullen.
+            // Neu: Verkettung (jedes Byte haengt vom vorherigen ab) + XOR 0xFF Inversionen.
+            bool use_improved_pw_info = false;
+            if (richtung_info == 0)
+            {
+                use_improved_pw_info = true;
+            }
+            else
+            {
+                use_improved_pw_info = (version_byte_of_file == 0x06 || version_byte_of_file == 0x07);
+            }
+            // ===== Ende V5.2 =====
 
 
             try
@@ -1085,14 +1103,31 @@ namespace Turbine
                         }
                     }
 
-                    passwort_info_byte = (byte)(passwort_laenge + passwort_ascii_addiert + passwort_ascii_wertig_addiert + passwort_kleinster_wert + passwort_groesster_wert);
-                    passwort_info_byte2 = (byte)((passwort_laenge + passwort_ascii_addiert + passwort_ascii_wertig_addiert + passwort_kleinster_wert + passwort_groesster_wert) >> 8);
-                    passwort_info_byte3 = (byte)(passwort_info_byte2 ^ passwort_info_byte);
-                    passwort_info_byte3_2 = (byte)((passwort_laenge ^ passwort_ascii_addiert + passwort_ascii_wertig_addiert ^ passwort_kleinster_wert ^ passwort_groesster_wert) >> 3);
-                    passwort_info_byte3_3 = (byte)((passwort_laenge ^ passwort_ascii_addiert ^ passwort_ascii_wertig_addiert + passwort_kleinster_wert + passwort_groesster_wert) >> 4);
-                    passwort_info_byte3_4 = (byte)((passwort_laenge + passwort_ascii_addiert ^ passwort_ascii_wertig_addiert ^ passwort_kleinster_wert + passwort_groesster_wert) >> 5);
-                    passwort_info_byte3_5 = (byte)((passwort_laenge ^ passwort_ascii_addiert + passwort_ascii_wertig_addiert + passwort_kleinster_wert ^ passwort_groesster_wert) >> 7);
-                    passwort_info_byte3_6 = (byte)((passwort_laenge ^ passwort_ascii_addiert ^ passwort_ascii_wertig_addiert ^ passwort_kleinster_wert ^ passwort_groesster_wert) >> 2);
+                    if (use_improved_pw_info)
+                    {
+                        // V5.2: Verbesserte Passwort-Info-Bytes — keine Rechts-Shifts,
+                        // Verkettung fuer Lawineneffekt, XOR 0xFF gegen Null-Haeufung.
+                        passwort_info_byte = (byte)(passwort_laenge ^ passwort_ascii_addiert ^ passwort_ascii_wertig_addiert + passwort_kleinster_wert + passwort_groesster_wert);
+                        passwort_info_byte2 = (byte)((passwort_laenge + passwort_ascii_addiert + passwort_ascii_wertig_addiert ^ passwort_kleinster_wert ^ passwort_groesster_wert));
+                        passwort_info_byte3 = (byte)(passwort_info_byte2 ^ passwort_info_byte);
+                        passwort_info_byte3_2 = (byte)((passwort_info_byte3 ^ passwort_ascii_addiert + passwort_ascii_wertig_addiert ^ passwort_kleinster_wert ^ passwort_groesster_wert));
+                        passwort_info_byte3_3 = (byte)((passwort_info_byte3_2 ^ passwort_ascii_addiert ^ passwort_ascii_wertig_addiert + passwort_kleinster_wert + passwort_groesster_wert) ^ 0xFF);
+                        passwort_info_byte3_4 = (byte)((passwort_info_byte3_3 ^ passwort_ascii_addiert ^ passwort_ascii_wertig_addiert ^ passwort_kleinster_wert + passwort_groesster_wert));
+                        passwort_info_byte3_5 = (byte)((passwort_info_byte3_4 ^ passwort_ascii_addiert + passwort_ascii_wertig_addiert + passwort_kleinster_wert ^ passwort_groesster_wert) ^ 0xFF);
+                        passwort_info_byte3_6 = (byte)((passwort_info_byte3_5 ^ passwort_ascii_addiert ^ passwort_ascii_wertig_addiert ^ passwort_kleinster_wert ^ passwort_groesster_wert));
+                    }
+                    else
+                    {
+                        // Legacy V1-V5.1: Original-Berechnung mit Rechts-Shifts
+                        passwort_info_byte = (byte)(passwort_laenge + passwort_ascii_addiert + passwort_ascii_wertig_addiert + passwort_kleinster_wert + passwort_groesster_wert);
+                        passwort_info_byte2 = (byte)((passwort_laenge + passwort_ascii_addiert + passwort_ascii_wertig_addiert + passwort_kleinster_wert + passwort_groesster_wert) >> 8);
+                        passwort_info_byte3 = (byte)(passwort_info_byte2 ^ passwort_info_byte);
+                        passwort_info_byte3_2 = (byte)((passwort_laenge ^ passwort_ascii_addiert + passwort_ascii_wertig_addiert ^ passwort_kleinster_wert ^ passwort_groesster_wert) >> 3);
+                        passwort_info_byte3_3 = (byte)((passwort_laenge ^ passwort_ascii_addiert ^ passwort_ascii_wertig_addiert + passwort_kleinster_wert + passwort_groesster_wert) >> 4);
+                        passwort_info_byte3_4 = (byte)((passwort_laenge + passwort_ascii_addiert ^ passwort_ascii_wertig_addiert ^ passwort_kleinster_wert + passwort_groesster_wert) >> 5);
+                        passwort_info_byte3_5 = (byte)((passwort_laenge ^ passwort_ascii_addiert + passwort_ascii_wertig_addiert + passwort_kleinster_wert ^ passwort_groesster_wert) >> 7);
+                        passwort_info_byte3_6 = (byte)((passwort_laenge ^ passwort_ascii_addiert ^ passwort_ascii_wertig_addiert ^ passwort_kleinster_wert ^ passwort_groesster_wert) >> 2);
+                    }
                     /*
                     block_laenge = (byte)((passwort_info_byte) % 16);
 
@@ -1222,6 +1257,16 @@ namespace Turbine
                             /*~E:I13*/
                             /*~T*/
 
+                            // V5.2: Schieberegister mit Passwort-Info-Bytes vorinitialisieren (Vektor 1)
+                            if (use_improved_pw_info && passwortzaehler2 == 0)
+                            {
+                                temp_passwort_gen5 = passwort_info_byte;
+                                temp_passwort_gen4 = passwort_info_byte2;
+                                temp_passwort_gen3 = passwort_info_byte3;
+                                temp_passwort_gen2 = passwort_info_byte3_2;
+                                temp_passwort_gen  = passwort_info_byte3_3;
+                                passwort_gen_vector[passwortzaehler2] = passwort_info_byte3_4;
+                            }
 
                             passwort_gen_vector[passwortzaehler2] = (byte)(((byte)passwort_gen_vector[passwortzaehler2] ^ (byte)name_der_datei6[passwortzaehler3]) ^ (((byte)temp_passwort_gen ^ (byte)temp_passwort_gen2) + ((byte)temp_passwort_gen3 ^ (byte)temp_passwort_gen4 ^ (byte)temp_passwort_gen5)));
 
@@ -1413,6 +1458,16 @@ namespace Turbine
                             /*~E:I28*/
                             /*~T*/
 
+                            // V5.2: Schieberegister mit Passwort-Info-Bytes vorinitialisieren (Vektor 2)
+                            if (use_improved_pw_info && passwortzaehler2 == 0)
+                            {
+                                temp_passwort_gen5 = passwort_info_byte3_2;
+                                temp_passwort_gen4 = passwort_info_byte3_3;
+                                temp_passwort_gen3 = passwort_info_byte3_4;
+                                temp_passwort_gen2 = passwort_info_byte3_5;
+                                temp_passwort_gen  = passwort_info_byte3_6;
+                                passwort_gen_vector2[passwortzaehler2] = passwort_info_byte;
+                            }
 
                             passwort_gen_vector2[passwortzaehler2] = (byte)(((byte)(passwort_gen_vector2[passwortzaehler2] ^ name_der_datei6[passwortzaehler3])) ^ (((byte)(temp_passwort_gen ^ temp_passwort_gen2)) + ((byte)(temp_passwort_gen3 ^ temp_passwort_gen4 ^ temp_passwort_gen5))));
 
@@ -1421,7 +1476,10 @@ namespace Turbine
 
 
                             temp_passwort_gen5 = temp_passwort_gen4;
-                            temp_passwort_gen4 = (byte)(temp_passwort_gen3 << 3);
+                            if (use_improved_pw_info)
+                                temp_passwort_gen4 = (byte)((temp_passwort_gen3 << 3) | (temp_passwort_gen3 >> 5));
+                            else
+                                temp_passwort_gen4 = (byte)(temp_passwort_gen3 << 3);
                             temp_passwort_gen3 = (byte)(temp_passwort_gen2 + 23);
                             temp_passwort_gen2 = temp_passwort_gen;
                             temp_passwort_gen = passwort_gen_vector2[passwortzaehler2];
@@ -1588,6 +1646,16 @@ namespace Turbine
                             /*~E:I42*/
                             /*~T*/
 
+                            // V5.2: Schieberegister mit Passwort-Info-Bytes vorinitialisieren (Vektor 3)
+                            if (use_improved_pw_info && passwortzaehler2 == 0)
+                            {
+                                temp_passwort_gen5 = passwort_info_byte3_4;
+                                temp_passwort_gen4 = passwort_info_byte3_5;
+                                temp_passwort_gen3 = passwort_info_byte3_6;
+                                temp_passwort_gen2 = passwort_info_byte;
+                                temp_passwort_gen  = passwort_info_byte2;
+                                passwort_gen_vector3[passwortzaehler2] = passwort_info_byte3;
+                            }
 
                             passwort_gen_vector3[passwortzaehler2] = (byte)(((byte)(passwort_gen_vector3[passwortzaehler2] ^ name_der_datei6[passwortzaehler3])) ^ (((byte)(temp_passwort_gen ^ temp_passwort_gen2)) ^ ((byte)(temp_passwort_gen3 ^ temp_passwort_gen4 ^ temp_passwort_gen5))));
 
@@ -1806,6 +1874,16 @@ namespace Turbine
                             /*~E:I58*/
                             /*~T*/
 
+                            // V5.2: Schieberegister mit Passwort-Info-Bytes vorinitialisieren (Vektor 4)
+                            if (use_improved_pw_info && passwortzaehler2 == 0)
+                            {
+                                temp_passwort_gen5 = passwort_info_byte3_6;
+                                temp_passwort_gen4 = passwort_info_byte3;
+                                temp_passwort_gen3 = passwort_info_byte3_2;
+                                temp_passwort_gen2 = passwort_info_byte3_3;
+                                temp_passwort_gen  = passwort_info_byte3_4;
+                                passwort_gen_vector4[passwortzaehler2] = passwort_info_byte3_5;
+                            }
 
                             passwort_gen_vector4[passwortzaehler2] = (byte)((passwort_gen_vector4[passwortzaehler2] ^ name_der_datei6[passwortzaehler3]) ^ ((temp_passwort_gen ^ temp_passwort_gen2) ^ (temp_passwort_gen3 ^ temp_passwort_gen4 ^ temp_passwort_gen5)));
 
@@ -1814,7 +1892,10 @@ namespace Turbine
 
 
                             temp_passwort_gen5 = (byte)(temp_passwort_gen4 + passwortzaehler);
-                            temp_passwort_gen4 = (byte)(temp_passwort_gen3 << 2);
+                            if (use_improved_pw_info)
+                                temp_passwort_gen4 = (byte)((temp_passwort_gen3 << 2) | (temp_passwort_gen3 >> 6));
+                            else
+                                temp_passwort_gen4 = (byte)(temp_passwort_gen3 << 2);
                             temp_passwort_gen3 = (byte)(temp_passwort_gen2 + 31);
                             temp_passwort_gen2 = temp_passwort_gen;
                             temp_passwort_gen = passwort_gen_vector4[passwortzaehler2];
@@ -2051,6 +2132,7 @@ namespace Turbine
                             // Position 6 = Turbine-Versions-Byte:
                             //   0x00 = Legacy V1, 0x01 = V2 PBKDF2, 0x02 = V2 Key-File
                             //   0x03 = V3 Key-File+Whitening, 0x04 = V4 PBKDF2+Fix, 0x05 = V4 Key-File+Fix
+                            //   0x06 = V5.2 PBKDF2+Fix+ImprovedPwInfo, 0x07 = V5.2 Key-File+Fix+ImprovedPwInfo
                             binWriter2.Write(version_byte_to_write);
                             binWriter2.Write((byte)(0x0));
                             binWriter2.Write((byte)(0x0));
@@ -4530,7 +4612,7 @@ namespace Turbine
 
         private void button4_Click(object sender, RoutedEventArgs e)
         {
-            ShowFg("Turbine V5.1 is a free encryption program.\n\n" +
+            ShowFg("Turbine V5.2 is a free encryption program.\n\n" +
                 "Cipher: 1280-bit internal state across 4 parallel gear groups, stop-go-clocked\n" +
                 "shift register design (related family: Trivium).\n\n" +
                 "Key derivation:\n" +

@@ -1,4 +1,4 @@
-# Turbine V5.1
+# Turbine V5.2
 
 A free, open-source file encryption tool for personal use.
 Originally developed in 2012 by **Reinhard Jesolowitz** as a way to protect

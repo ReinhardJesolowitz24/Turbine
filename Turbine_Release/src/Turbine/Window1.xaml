@@ -1,7 +1,7 @@
 ﻿<Window x:Class="Turbine.Window1"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Title="Turbine V5.1" Height="750" Width="458" Foreground="Silver" Visibility="Collapsed" AllowsTransparency="False" FontSize="11" Loaded="Window_Loaded" WindowStyle="ThreeDBorderWindow" Topmost="False" WindowStartupLocation="CenterScreen" VerticalAlignment="Center" HorizontalAlignment="Center" ResizeMode="CanResizeWithGrip" ShowInTaskbar="True">
+    Title="Turbine V5.2" Height="750" Width="458" Foreground="Silver" Visibility="Collapsed" AllowsTransparency="False" FontSize="11" Loaded="Window_Loaded" WindowStyle="ThreeDBorderWindow" Topmost="False" WindowStartupLocation="CenterScreen" VerticalAlignment="Center" HorizontalAlignment="Center" ResizeMode="CanResizeWithGrip" ShowInTaskbar="True">
 
 
     <Grid Height="700" Width="440" Background="#F0F0F0">
@@ -56,7 +56,7 @@
         <Label Height="37.774" HorizontalAlignment="Left" Margin="18.681,8.861,0,0" Name="label5" VerticalAlignment="Top" Width="132.209" FontSize="20" Foreground="Black" Visibility="Hidden">
             <Label.BitmapEffect>
                 <EmbossBitmapEffect />
-            </Label.BitmapEffect> Turbine V5.1
+            </Label.BitmapEffect> Turbine V5.2
         </Label>
         <!-- 2026-05-20: Top-Margin von 8.861 auf 15.861 erhoeht (+7 px),
              damit die Logo-Mitte tiefer sitzt (Feedback "Grafiken_zu_hoch.png"). -->
