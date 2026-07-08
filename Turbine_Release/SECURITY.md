@@ -37,8 +37,12 @@ It is **not** designed for:
 - **No backdoor or master key** — verifiable by reading
   `src/Window1.xaml.cs`. The cipher state derives entirely from the user's
   password plus a random IV.
-- **Cryptographically random IV** — uses `RNGCryptoServiceProvider` for the
-  16 IV bytes. Same plaintext + same password produces different ciphertexts.
+- **Cryptographically random, hardened IV** — the 16 IV bytes are derived from
+  two independent sources (OS CSPRNG `RNGCryptoServiceProvider` + independent
+  timing jitter) combined via a SHA-256 extractor, as defense-in-depth against a
+  manipulated OS RNG. Format-transparent (no version-byte change; old files stay
+  decryptable). Same plaintext + same password produces different ciphertexts.
+  See [IV_HARDENING.md](IV_HARDENING.md).
 - **Large internal state** — 1280 bits across 4 parallel gear groups,
   larger than AES-256's 256-bit key.
 - **Wide password range** — 6 to 1024 bytes. With a 32-byte random password

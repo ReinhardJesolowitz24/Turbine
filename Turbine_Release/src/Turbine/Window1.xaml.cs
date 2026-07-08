@@ -854,10 +854,15 @@ namespace Turbine
             byte block_modulo = 0;
 
             byte[] zufall = new byte[16];
-            using (var rng = new RNGCryptoServiceProvider())
-            {
-                rng.GetBytes(zufall);
-            }
+            // 2026-07-08: Gehaertete IV-Erzeugung (CNG + unabhaengiger Timing-Jitter, SHA-256).
+            // Defense-in-Depth gegen einen manipulierten OS-CSPRNG; format-transparent, kein
+            // Versions-Byte noetig. Details/Untersuchung: IV_HARDENING.md, Impl.: Window1.IvHardening.cs
+            GenerateIV16(zufall);
+            // --- vorher (reiner OS-CSPRNG):
+            // using (var rng = new RNGCryptoServiceProvider())
+            // {
+            //     rng.GetBytes(zufall);
+            // }
 
             // ===== KDF V2/V3/V4/V5.2 - Schluessel-Ableitung mit Whitening =====
             // Versions-Byte im BMP-Header (Position 6, normalerweise "reserved"):

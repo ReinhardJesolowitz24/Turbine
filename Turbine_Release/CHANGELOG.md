@@ -6,6 +6,39 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ---
 
+## [IV Hardening] — 2026-07-08
+
+### Hardened per-file IV generation (defense-in-depth)
+
+The 16-byte initialization vector is now derived from **two independent
+randomness sources** combined by a SHA-256 extractor, instead of the OS CSPRNG
+alone:
+
+- **Source 1:** OS CSPRNG (`RNGCryptoServiceProvider` / BCryptGenRandom) — primary.
+- **Source 2:** timing jitter (`Stopwatch` deltas) + environment values —
+  independent of the CNG entropy pool (deliberately *not* `Guid.NewGuid()`, which
+  is itself CNG-based on Windows).
+
+**Rationale:** guards against a manipulated or predictable OS RNG (historical
+precedent: Dual_EC_DRBG). As long as one source is unpredictable, the IV is
+unpredictable — a diversified hedge against a common-cause failure of the single
+entropy source. Timing jitter is intentionally low-tech: weak but clearly
+independent, and requires no native interop (RDRAND was considered and deferred).
+
+**Format-transparent:** no new version/variant byte. Only IV *generation*
+changes; the IV is stored and read back as before, so **all existing files
+remain decryptable**.
+
+**Impl.:** `Window1.IvHardening.cs` (`GenerateIV16`), call site in `Window1.xaml.cs`.
+**Background/investigation:** see `IV_HARDENING.md` — a differential/diffusion
+study (Fable-framed, Opus-executed) that made the IV's load-bearing role explicit.
+
+Self-test (20,000 IVs): per-byte mean 127.48, χ²(255)=240.5, 0 duplicates;
+with the CNG contribution forced to a constant the IVs still differ (independent
+source confirmed).
+
+---
+
 ## [V5.2 — Key Generation Improvements] — 2026-06-12
 
 ### Improved key generation quality (version bytes `0x06` / `0x07`)
