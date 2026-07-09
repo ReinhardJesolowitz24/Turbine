@@ -28,6 +28,40 @@ It is **not** designed for:
   plaintext, making the corruption obvious to the receiver; see
   CRYPTANALYSIS.md section 1.3 for details)
 
+### Endpoint trust — read this before relying on Turbine in a hostile environment
+
+Turbine assumes it runs on a **trustworthy machine**. No cipher can protect you
+on a computer an adversary controls, and it is important to be honest about this
+because getting it wrong can put people at real risk.
+
+On a compromised endpoint the attack does **not** target the cipher — it targets
+the inputs and the binary, *before or around* the encryption:
+
+- a keylogger or screen/memory capture reads your **password / key-file and the
+  plaintext** as you type them — the quality of the encryption is then irrelevant;
+- a swapped or trojaned `Turbine.exe` can weaken key generation or exfiltrate
+  data directly. The published **SHA-256 checksums** and open source let you
+  verify a build, but only on a system you trust to run the check honestly.
+
+**Scope of the IV hardening (see [IV_HARDENING.md](IV_HARDENING.md)):** mixing an
+independent timing-jitter source into the IV is defense-in-depth against a
+*subverted-but-otherwise-standard* OS RNG (the Dual_EC_DRBG class of problem) on
+**hardware you trust**. Because most manipulation is deployed in a standardized,
+one-size-fits-all way, a non-standard IV construction can also fail to line up
+with off-the-shelf attack tooling — a genuine but **narrow** and **not
+guaranteed** benefit. It is **not** a license to encrypt sensitive material on
+public or untrusted machines.
+
+**For high-risk users** (journalists, lawyers, activists, or ordinary citizens
+under a surveilling or repressive state): assume any public or borrowed computer
+is compromised. Encrypt sensitive material only on **your own trusted device**,
+ideally from a live/amnesiac operating system (e.g. Tails) running on your own
+hardware. For adversaries at this level, prefer audited tools with a formal
+security record (VeraCrypt, age, GnuPG) over a personal-use cipher. Note also
+that **coercion** ("hand over the password") defeats every encryption tool
+equally; that is a threat for operational security (data minimization, plausible
+deniability), not cryptography.
+
 ---
 
 ## Verified properties (as of 2026-05-15)
