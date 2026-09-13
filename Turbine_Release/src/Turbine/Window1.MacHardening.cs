@@ -36,6 +36,9 @@ namespace Turbine
         // Von DoWork gesetzt, wenn die MAC-Verifikation beim Entschluesseln fehlschlaegt.
         private bool MacFailed = false;
 
+        // Von DoWork gesetzt, wenn beim VERSCHLUESSELN ein entartetes Key-File abgelehnt wird (C1).
+        private bool LowEntropyKeyReject = false;
+
         private const int MAC_TAG_LEN = 48;   // HMAC-SHA-384 = 48 Byte
 
         /// K_mac aus dem expandierten Master-Key (name_der_datei6, nach der langsamen KDF).

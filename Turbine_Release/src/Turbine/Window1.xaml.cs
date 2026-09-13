@@ -940,6 +940,14 @@ namespace Turbine
                 }
             }
 
+            // C1-Schutz (nur Verschluesselung): entartetes Key-File ablehnen, BEVOR eine schwache Datei entsteht.
+            // Beim Entschluesseln wird NICHT geprueft -> Altdateien mit schwachem Key bleiben oeffenbar.
+            if (richtung_info == 0 && schluesseldatei_geladen == 1 && !KeyMaterialEntropyOK(name_der_datei6X, 1023))
+            {
+                LowEntropyKeyReject = true;
+                return;   // vor KDF/Output -> keine Ausgabe
+            }
+
             // ----- V2/V4/V5.2: PBKDF2 fuer Passwort-Modus (Versions-Byte 0x01, 0x04 oder 0x06) -----
             bool use_pbkdf2 = false;
             if (richtung_info == 0 && schluesseldatei_geladen == 0)
@@ -4138,6 +4146,13 @@ namespace Turbine
                 ShowFg("Integritaetspruefung fehlgeschlagen - Datei wurde manipuliert oder der Schluessel ist falsch. Es wurde keine Ausgabe erzeugt.");
                 return;
             }
+            // C1: entartetes Key-File beim Verschluesseln abgelehnt.
+            if (LowEntropyKeyReject)
+            {
+                LowEntropyKeyReject = false;
+                ShowFg("Dieses Key-File hat zu wenig Zufall - bitte eine echte Fotografie verwenden (kein einfarbiges/synthetisches Bild). Es wurde nichts verschluesselt.");
+                return;
+            }
             // First, handle the case where an exception was thrown.
             if (e.Error != null)
             {
@@ -5220,16 +5235,11 @@ namespace Turbine
                         keyfile.Close();
                         keyreader.Close();
 
-                        // C1-Schutz: entartete Key-Files (einfarbig/synthetisch) ablehnen.
-                        if (!KeyMaterialEntropyOK(name_der_datei6X, 1023))
-                        {
-                            ShowFg("Dieses Key-File hat zu wenig Zufall - bitte eine echte Fotografie verwenden (kein einfarbiges/synthetisches Bild).");
-                            return;
-                        }
-
                         textBox3.Password = "";
                         textBox4.Password = "";
 
+                        // Laden immer erlauben (auch schwache Key-Files) -> Altdateien bleiben oeffenbar.
+                        // Die Entropie-Pruefung (C1) erfolgt erst beim VERSCHLUESSELN in DoWork.
                         schluesseldatei_geladen = 1;
                         button6.Background = Brushes.Green;
 
