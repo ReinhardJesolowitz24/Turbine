@@ -6,6 +6,49 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ---
 
+## [V6 — Integrity MAC + AES-disjoint S-box] — 2026-09-13
+
+### Authenticated integrity: HMAC-SHA-384 (version bytes `0x08` / `0x09`)
+
+New encryptions now carry a real authenticator, and this replaces the previous
+(incorrect) claim that the block feedback provided "de-facto tamper detection".
+
+- **Encrypt-then-MAC** with **HMAC-SHA-384** (48-byte tag) over header + IV +
+  ciphertext, appended to the file. On decryption the tag is verified
+  (constant-time) **before any plaintext is written**; on mismatch the operation
+  aborts with a clear "integrity check failed — file tampered or wrong key"
+  message and produces **no output** (fail-safe). This also fixes the data-loss
+  hazard where a wrong key previously "decrypted successfully" into garbage.
+- **Key separation:** MAC key = `HMAC-SHA-384(master_key, "TURBINE-MAC-v1")`,
+  derived **after** the slow KDF → the MAC is not a fast password-guessing oracle.
+- **New version bytes:** `0x08` = password + MAC, `0x09` = key-file + MAC (default
+  for new files). Old versions (0x00–0x07) decrypt unchanged (backward compatible).
+- **Residual (downgrade):** stripping the MAC via a version-byte edit removes
+  authentication but cannot forge a valid tag; an optional strict mode would close it.
+
+### Correction: block feedback is NOT tamper detection
+
+Empirical testing (2026-09) disproved the earlier claim: crafted checksum-neutral
+edits (matched 2-bit flip, byte swap within a block) and any tail edit decrypt
+**silently and locally**; a generic bit flip re-synchronises before end-of-file.
+`SECURITY.md` and `CRYPTANALYSIS.md` references corrected. Real integrity is now
+the HMAC above.
+
+### New S-box for V6 (irreducible polynomial `0x1F3`)
+
+Version 0x08/0x09 use a new AES-class S-box built from GF(2^8)/`0x1F3` (affine
+constant 0x4A) with **zero entries in common with the AES S-box** — same proven
+strength (nonlinearity 112, differential uniformity 4), maximal independence from
+AES. Versions 0x04–0x07 keep the previous S-box (poly `0x11D`). Purely a
+distinctness choice; no security difference between the two S-boxes.
+
+### Verification
+Shipping build (GUI acceptance, 2026-09-13): encrypt → 0x09 + MAC (tag
+independently recomputed, bit-identical) + random IV; round-trip byte-exact;
+tampered file → integrity dialog + no output.
+
+---
+
 ## [IV Hardening] — 2026-07-08
 
 ### Hardened per-file IV generation (defense-in-depth)

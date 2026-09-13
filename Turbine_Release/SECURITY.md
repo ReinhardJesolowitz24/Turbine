@@ -22,11 +22,24 @@ It is **not** designed for:
 - Defense against intelligence agencies or well-funded cryptanalysts
 - High-stakes commercial secret protection
 - Long-term archival where ciphers may face decades of future analysis
-- Authentication / integrity (it does not sign or MAC the ciphertext —
-  but note that the CFB-like feedback mode provides **de-facto tamper
-  detection**: any modification to the ciphertext destroys all subsequent
-  plaintext, making the corruption obvious to the receiver; see
-  CRYPTANALYSIS.md section 1.3 for details)
+
+### Integrity / tamper detection (corrected 2026-09)
+
+**Earlier versions of this document claimed the block feedback provided "de-facto
+tamper detection". That claim was wrong and is retracted.** Empirical testing
+(2026-09) showed that crafted, *checksum-neutral* changes — a matched 2-bit flip
+or a byte swap within one block — and **any** change in the file tail decrypt
+**silently and locally**, with no propagation; even a generic bit flip
+re-synchronises before end-of-file rather than destroying "all subsequent
+plaintext". The block feedback is **not** an integrity mechanism.
+
+**Since V6 (version bytes `0x08` / `0x09`, the default for new files) Turbine
+appends a real authenticator** — an **HMAC-SHA-384** tag over the header +
+ciphertext (Encrypt-then-MAC), verified **before any plaintext is written**. On
+mismatch nothing is output and the user is told the file was tampered with or the
+key is wrong (this also turns a wrong key from "silently decrypts to garbage"
+into a clear error). Files from older versions (0x00–0x07) remain unauthenticated.
+See the dedicated section below.
 
 ### Endpoint trust — read this before relying on Turbine in a hostile environment
 
@@ -77,6 +90,10 @@ deniability), not cryptography.
   manipulated OS RNG. Format-transparent (no version-byte change; old files stay
   decryptable). Same plaintext + same password produces different ciphertexts.
   See [IV_HARDENING.md](IV_HARDENING.md).
+- **Authenticated integrity (V6, new files)** — new encryptions (version bytes
+  0x08/0x09) carry an **HMAC-SHA-384** Encrypt-then-MAC tag, verified before any
+  plaintext is written. Detects any tampering (including crafted, checksum-neutral
+  edits) and wrong keys; fail-safe (no output on mismatch).
 - **Large internal state** — 1280 bits across 4 parallel gear groups,
   larger than AES-256's 256-bit key.
 - **Wide password range** — 6 to 1024 bytes. With a 32-byte random password
@@ -147,22 +164,34 @@ Comprehensive cryptanalytic review on 100 MB of keystream output
 | Cross-byte bit correlation matrix (64 pairs) | Zero significant correlations — bias does not cross byte boundaries |
 | 3-bit linear approximations (56 triples) | None significant (all \|Z\| < 3.5) |
 | Bias independence test | Bit 6↔7 and Bit 2↔3 biases are statistically **independent** (Z = -0.09) — they cannot be combined into a stronger attack |
-| **Tamper-propagation test (2026-05-18)** | **1-bit flip in ciphertext destroys all plaintext from that point to end of file — CFB-like chaining via `block_quersumme` confirmed** |
+| **Tamper test (revised 2026-09)** | A generic bit flip garbles only a **bounded** region, then re-synchronises (not "to end of file"); **checksum-neutral edits and tail edits decrypt silently** → block feedback is NOT reliable integrity. Real integrity added as an **HMAC-SHA-384 MAC** in V6 (0x08/0x09). |
 
-### Tamper-detection property (informal)
+### Integrity: HMAC-SHA-384 MAC (V6, version 0x08/0x09)
 
-Because of the CFB-like cross-block feedback (see CRYPTANALYSIS.md §1.3),
-Turbine provides a form of **manipulation detection without an explicit
-MAC**: any change to the ciphertext, even a single bit, causes the
-decryption from that point onward to produce garbage. The receiver
-notices immediately. This is not a cryptographic guarantee in the
-strict sense (an attacker could deliberately corrupt the entire tail
-of the file), but it does prevent **silent targeted modification** of
-specific plaintext values.
+The block feedback does **not** provide tamper detection (see the corrected note
+in the threat model and the revised tamper test above). Real integrity is
+provided from V6 on:
 
-For threat models requiring strict cryptographic integrity guarantees
-(e.g., where the receiver cannot tolerate any uncertainty), an explicit
-authenticator (HMAC-SHA256 or similar) should still be added.
+- **Encrypt-then-MAC** with **HMAC-SHA-384** (48-byte tag) over the header + IV +
+  ciphertext, appended to the file.
+- **Verify-before-decrypt:** the tag is checked (constant-time comparison) before
+  any plaintext is written. On mismatch the decryption aborts with a clear
+  "integrity check failed — file tampered or wrong key" message and writes **no
+  output** (fail-safe). This also removes the old data-loss hazard where a wrong
+  key "decrypted successfully" into garbage next to the secure-delete feature.
+- **Key separation:** the MAC key is `HMAC-SHA-384(master_key, "TURBINE-MAC-v1")`,
+  derived from the master key **after** the slow KDF — so the MAC is not a fast
+  password-guessing oracle.
+- **Verified (2026-09):** on the shipping build — encrypt→0x09+MAC (tag
+  independently recomputed, bit-identical), round-trip byte-exact, and tampered
+  files rejected with no output.
+- **Residual (downgrade):** an attacker can strip the MAC by editing the version
+  byte back to 0x06/0x07 — this *removes* authentication but cannot *forge* a
+  valid tag. An optional future "strict mode" (accept only 0x08/0x09) would close
+  this.
+
+Older files (0x00–0x07) remain unauthenticated; re-encrypt important files with
+V6 to gain integrity protection.
 
 ---
 
@@ -209,7 +238,10 @@ The following improvements have been integrated:
    - `0x00` = Legacy V1 (no KDF)
    - `0x01` = V2 password with PBKDF2-SHA512
    - `0x02` = V2 key-file (raw bytes, legacy)
-   - `0x03` = V3 key-file with SHA-512 whitening (new default for key-files)
+   - `0x03` = V3 key-file with SHA-512 whitening
+   - `0x04` / `0x05` = V4 password / key-file (symmetric masks + AES-class S-box, poly 0x11D)
+   - `0x06` / `0x07` = V5.2 password / key-file (improved password-info bytes)
+   - `0x08` / `0x09` = **V6 password / key-file + HMAC-SHA-384 MAC + AES-disjoint S-box (poly 0x1F3)** — default for new files
 4. ✓ **SHA-512 whitening for key-file mode** (V3) added 2026-05-20.
    Empirically improves the Approximate Entropy NIST test when used with
    high-entropy key-file inputs (e.g., previously encrypted .tur files).
@@ -217,9 +249,9 @@ The following improvements have been integrated:
 
 ## Possible future improvements (V3 candidates)
 
-3. **Add an authentication tag** (HMAC-SHA256 or similar) so manipulation of
-   ciphertext can be detected explicitly (currently the CFB-like feedback
-   provides only implicit tamper detection)
+3. ✓ **DONE (V6, 2026-09):** authentication tag added — **HMAC-SHA-384**
+   Encrypt-then-MAC (version 0x08/0x09), verified before decryption. Replaces the
+   (incorrect) earlier claim of implicit tamper detection.
 5. **Argon2id** instead of PBKDF2 for memory-hard derivation (resistant to
    ASIC/GPU attacks)
 6. **Authenticated Encryption with Associated Data (AEAD) wrapper** for
