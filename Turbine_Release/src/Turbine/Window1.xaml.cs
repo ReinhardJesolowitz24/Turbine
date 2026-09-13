@@ -5142,7 +5142,7 @@ namespace Turbine
 
             string erg3;
             MessageBoxButton buttons = MessageBoxButton.YesNo;
-            string message = "As an alternative to a manual key you can choose any file (eg a jpeg image) as a key file. The file must be at least 7 kbyte. A 1024 bytes big key will be generated. Do you would like to use a key file?";
+            string message = "As an alternative to a manual key you can choose a real photograph (a genuine photo, e.g. a JPEG) as a key file. The file must be at least 7 kbyte. Do NOT use a solid-color or synthetic image - it has too little randomness and will be rejected. A 1024 bytes big key will be generated. Would you like to use a key file?";
             string caption = "Load key file";
             string erg4 = "Yes";
 
@@ -5220,7 +5220,12 @@ namespace Turbine
                         keyfile.Close();
                         keyreader.Close();
 
-
+                        // C1-Schutz: entartete Key-Files (einfarbig/synthetisch) ablehnen.
+                        if (!KeyMaterialEntropyOK(name_der_datei6X, 1023))
+                        {
+                            ShowFg("Dieses Key-File hat zu wenig Zufall - bitte eine echte Fotografie verwenden (kein einfarbiges/synthetisches Bild).");
+                            return;
+                        }
 
                         textBox3.Password = "";
                         textBox4.Password = "";

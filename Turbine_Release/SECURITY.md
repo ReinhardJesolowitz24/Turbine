@@ -94,6 +94,11 @@ deniability), not cryptography.
   0x08/0x09) carry an **HMAC-SHA-384** Encrypt-then-MAC tag, verified before any
   plaintext is written. Detects any tampering (including crafted, checksum-neutral
   edits) and wrong keys; fail-safe (no output on mismatch).
+- **Key-file entropy guard** — a key file is rejected at load time if its derived
+  key material has too little randomness (< 64 distinct byte values or < 6.0
+  bits/byte), preventing a degenerate solid-color/synthetic file from silently
+  producing a weak, near-public key. Real photographs pass easily; use a genuine
+  photo.
 - **Large internal state** — 1280 bits across 4 parallel gear groups,
   larger than AES-256's 256-bit key.
 - **Wide password range** — 6 to 1024 bytes. With a 32-byte random password

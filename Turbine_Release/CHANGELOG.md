@@ -6,6 +6,22 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ---
 
+## [Key-file entropy guard] — 2026-09-13
+
+Key-file loading now **rejects degenerate key files** — solid-color or synthetic
+images, zero-padded or silent files — whose three XOR windows collapse to a
+near-constant key (making the derived key a public function of the stored IV).
+
+- Rejected if the derived 1023-byte key material has **< 64 distinct byte values
+  OR < 6.0 bits/byte** Shannon entropy. Real photographs (especially JPEG,
+  ~7.9 bits/byte) pass easily — this only stops the degenerate misuse.
+- The key-file prompt now recommends a **real photograph** and warns against
+  solid-color/synthetic images.
+- **Non-breaking:** load-time check only; the key derivation itself is unchanged,
+  so all existing files remain decryptable.
+
+---
+
 ## [V6 — Integrity MAC + AES-disjoint S-box] — 2026-09-13
 
 ### Authenticated integrity: HMAC-SHA-384 (version bytes `0x08` / `0x09`)

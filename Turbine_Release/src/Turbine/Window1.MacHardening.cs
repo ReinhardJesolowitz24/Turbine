@@ -54,6 +54,28 @@ namespace Turbine
             return diff == 0;
         }
 
+        // ===== C1-Schutz: Key-File-Entropie =====
+        // Lehnt entartete Key-Files ab (einfarbige/synthetische Bilder, null-gepaddete/
+        // stille Dateien), bei denen die drei XOR-Bereiche zu einem quasi-konstanten
+        // Schluessel zusammenfallen. Ablehnen bei < 64 verschiedenen Byte-Werten ODER
+        // < 6,0 bit/Byte Shannon-Entropie. Echte Fotos (v.a. JPEG) liegen bei ~256
+        // Werten / ~7,9 bit und passieren problemlos.
+        public static bool KeyMaterialEntropyOK(byte[] data, int len)
+        {
+            if (data == null || len <= 0) return false;
+            int[] freq = new int[256];
+            for (int i = 0; i < len; i++) freq[data[i]]++;
+            int distinct = 0; double ent = 0.0;
+            for (int v = 0; v < 256; v++)
+                if (freq[v] > 0)
+                {
+                    distinct++;
+                    double p = (double)freq[v] / len;
+                    ent -= p * Math.Log(p, 2.0);
+                }
+            return distinct >= 64 && ent >= 6.0;
+        }
+
         /// Encrypt-then-MAC: HMAC-SHA-384 ueber die gesamte fertige Datei, 48-B-Tag anhaengen.
         private void AppendMac(string path)
         {
