@@ -94,7 +94,7 @@ point for the WEP attack: short, related keys (as used in WEP's
 | **Real-world breaks** | WEP (seconds), TLS-RC4 (hours), many more | None publicly known |
 | **Public peer review** | 25+ years, hundreds of researchers | First external review in 2026 |
 | **Operating mode** | Pure stream (no cross-byte feedback) | **CFB-like with `block_quersumme` feedback** (see CRYPTANALYSIS.md §1.3) |
-| **Tamper detection** | None — single-byte modification stays local | **De-facto**: single bit flip propagates to end of file |
+| **Tamper detection** | None — single-byte modification stays local | Feedback alone: **none** (claim of "de-facto" detection withdrawn 2026-09, crafted edits pass silently). Since file versions `0x08`/`0x09`: **HMAC-SHA-384**, Encrypt-then-MAC |
 
 The structural differences favor Turbine in **every measurable category**
 except the most important one: **breadth of analysis**.
@@ -198,15 +198,18 @@ the KDF only changes what feeds into the gear initialization. A hypothetical
 V3 could go further by using Argon2id memory-hard derivation or adding an
 HMAC authentication tag.)
 
-### 6.2 No authentication tag
+### 6.2 Authentication tag (added 2026-09)
 
 Modern AEAD (Authenticated Encryption with Associated Data) ciphers like
 **AES-GCM** and **ChaCha20-Poly1305** include a cryptographic tag that
-detects tampering with the ciphertext. RC4 didn't have this either; nor
-does Turbine in v1.
+detects tampering with the ciphertext. RC4 didn't have this, and neither
+did Turbine up to file version `0x07`.
 
-For a hypothetical v2: appending an HMAC-SHA256 over the ciphertext
-would add this protection.
+Since file versions `0x08`/`0x09` Turbine appends an **HMAC-SHA-384** tag
+over header + IV + ciphertext (Encrypt-then-MAC) and verifies it before any
+plaintext is written. Remaining caveat: an attacker who rewrites the version
+byte to an old format removes the check (but cannot forge a valid tag);
+see `SECURITY.md`.
 
 ### 6.3 Public peer review
 

@@ -6,6 +6,26 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ---
 
+## [Review fixes] — 2026-11-15
+
+Three findings from a follow-up review of the V6 changes.
+
+- **Fixed: program stuck after a rejected operation.** After an integrity
+  failure on decryption, or a rejected low-entropy key file on encryption,
+  the internal "process running" flag stayed set. START and the wipe function
+  then did nothing until the program was restarted. The state and the display
+  are now reset before the message is shown.
+- **Fixed: MAC over large files.** The HMAC was computed by loading the whole
+  file into memory, which failed for files of 2 GB and more and needed as much
+  RAM as the file is large. It is now computed as a stream in 64 KB blocks.
+  The tag is unchanged: files written before this fix verify as before.
+- **Documentation:** the withdrawn "de-facto tamper detection" claim was still
+  present in `README.md`, `README_DE.md`, `CRYPTANALYSIS.md` and
+  `COMPARISON_WITH_RC4.md`. Those passages are now corrected (the V6 entry
+  below said `CRYPTANALYSIS.md` had already been corrected; it had not).
+
+---
+
 ## [Key-file entropy guard] — 2026-09-13
 
 Encrypting with a **degenerate key file** — solid-color or synthetic images,

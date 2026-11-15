@@ -21,12 +21,16 @@ profile, Turbine shows **structural advantages**: smaller number of
 detectable biases, biases that are statistically independent (and thus
 not combinable for stronger attacks), and no cross-byte correlations.
 
-A notable property is that the CFB-like feedback provides **de-facto
-manipulation detection**: any tampering with the ciphertext propagates
-to all subsequent decrypted bytes, making silent modification attacks
-infeasible. Conversely, the cipher is **brittle against transmission
-errors** — a single damaged byte in storage destroys all subsequent
-file content.
+> **Correction (2026-09):** earlier versions of this document stated that
+> the CFB-like feedback provides "de-facto manipulation detection". That
+> claim was **tested and found to be wrong** (see the correction box in
+> section 1.3). The feedback is *not* an integrity mechanism. Real integrity
+> protection exists only since file versions `0x08`/`0x09` (HMAC-SHA-384,
+> Encrypt-then-MAC); see `SECURITY.md`.
+
+The cross-block feedback makes the cipher **brittle against transmission
+errors** — a damaged byte in storage typically corrupts a long stretch of
+the following file content.
 
 The cipher passes **8 of 10 NIST Statistical Test Suite tests** on
 100 MB of keystream output. The two failures are caused by a single,
@@ -165,13 +169,27 @@ where Turbine uses simpler XOR+addition).
 
 #### Security implications
 
-**Beneficial:**
-- **De-facto manipulation detection.** Any single-bit change to ciphertext
-  destroys all plaintext from that point to end of file. The receiver
-  notices immediately that the file is corrupted.
-- **Resistant to targeted modification attacks.** An adversary cannot
-  silently change one value (e.g., "salary: 50000" → "salary: 80000")
-  because the change destroys all subsequent bytes.
+> **Correction (2026-09) — the feedback is NOT tamper detection.**
+> The 2026-05-18 test above used one *generic* bit flip and generalised from
+> it. A follow-up test on the real cipher in 2026-09 showed:
+>
+> - The chained checksums are computed over the **ciphertext** bytes, which
+>   an attacker can read and balance. An edit that leaves both checksums
+>   unchanged (a matched 2-bit flip, or swapping two bytes inside one block)
+>   decrypts **silently and locally** — only the edited bits change.
+> - The last (partial) block is not chained: a bit flip there produces a
+>   **bit-precise** flip in the plaintext.
+> - A generic bit flip does corrupt a stretch of plaintext, but the stream
+>   **re-synchronises** before end of file (≈227 bytes in the test), so
+>   "to end of file" in the tables of this section is not generally correct.
+>
+> The two "beneficial" claims that stood here (de-facto manipulation
+> detection; resistance to targeted modification) are therefore
+> **withdrawn**. An attacker does not know which ciphertext position holds
+> which plaintext value, but that is obscurity, not integrity. Since file
+> versions `0x08`/`0x09` Turbine appends an **HMAC-SHA-384** tag
+> (Encrypt-then-MAC, verified before any plaintext is written); files in
+> the older formats `0x00`–`0x07` have no tamper detection.
 
 **Disadvantageous:**
 - **Brittle against transmission errors.** A single bad sector in a USB
@@ -182,9 +200,8 @@ where Turbine uses simpler XOR+addition).
   be partially recovered after the damage point.
 
 For Turbine's intended threat model (personal data protection on
-removable media), the trade-off is reasonable: better to know the file
-is corrupted (and possibly maliciously altered) than to silently work
-with partially-tampered data.
+removable media), detecting corruption or malicious alteration is the job
+of the HMAC tag in file versions `0x08`/`0x09`, not of the feedback.
 
 ---
 
@@ -557,9 +574,10 @@ fundamentally different league than tools that ship serious bugs.
 - The cipher belongs to a **legitimate family** with successful modern
   representatives (Trivium for the keystream generator, CFB for the
   feedback mode)
-- The CFB-like mode provides **de-facto manipulation detection** without
-  an explicit MAC tag — any single-bit tamper destroys all subsequent
-  plaintext, making silent modification attacks infeasible
+- *(Corrected 2026-09)* The CFB-like mode does **not** provide tamper
+  detection — crafted edits can pass silently (see the correction in 1.3).
+  Integrity is provided by the HMAC-SHA-384 tag of file versions
+  `0x08`/`0x09`
 
 ### 7.2 What this review does NOT establish
 

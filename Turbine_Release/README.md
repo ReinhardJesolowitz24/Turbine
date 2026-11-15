@@ -25,14 +25,21 @@ naive content filters and looks unremarkable on disk.
 - **PBKDF2-SHA512 key derivation** (V2, 1,200,000 iterations) —
   makes brute-force attacks ~1.2 million times more expensive for weak
   passwords. Old V1 files remain readable without changes.
-- **Key-file mode with SHA-512 whitening** (V3) — use any file (photo,
-  document, archive) as a 1024-byte cryptographic key. For highest
-  statistical quality, use a previously encrypted .tur file as the key.
+- **Key-file mode with SHA-512 whitening** (V3) — use a high-entropy file
+  (a real photograph, an archive) as a 1024-byte cryptographic key. For
+  highest statistical quality, use a previously encrypted .tur file as the
+  key. Degenerate key files (solid-colour or synthetic images, zero-padded
+  files) are rejected on encryption.
 - **Cryptographically random IV** for every file (no two outputs are identical)
 - **Stop-go-clocked shift register** design, structurally related to Trivium
-- **CFB-like cross-block feedback** — any tampering with the ciphertext
-  destroys all subsequent plaintext (de-facto manipulation detection
-  without an explicit MAC)
+- **Integrity protection: HMAC-SHA-384, Encrypt-then-MAC** (current source,
+  file versions `0x08`/`0x09`) — the tag is verified before any plaintext is
+  written; a tampered file or a wrong key is rejected with no output.
+  *Correction:* earlier versions of this README claimed that the cross-block
+  feedback alone gave "de-facto manipulation detection". Testing in 2026-09
+  showed that this is **not true** — crafted edits can pass silently. Files
+  written by older versions (`0x00`–`0x07`) have **no** tamper detection.
+  See [SECURITY.md](SECURITY.md) and [CHANGELOG.md](CHANGELOG.md).
 - **No backdoor, no master key** — verifiable by reading the source
 
 ---

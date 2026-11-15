@@ -26,15 +26,24 @@ unverdächtig und unauffällig auf der Festplatte.
 - **PBKDF2-SHA512 Schlüssel-Ableitung** (V2, 1.200.000 Iterationen) —
   macht Brute-Force-Angriffe ~1,2 Millionen mal teurer bei schwachen
   Passwörtern. Alte V1-Dateien bleiben weiterhin lesbar.
-- **Schlüsseldatei-Modus mit SHA-512-Whitening** (V3) — beliebige Datei
-  (Foto, Dokument, Archiv) als 1024-Byte-Schlüssel verwendbar. Für höchste
-  statistische Qualität empfiehlt sich eine bereits verschlüsselte
-  .tur-Datei als Schlüsseldatei.
+- **Schlüsseldatei-Modus mit SHA-512-Whitening** (V3) — eine Datei mit
+  viel Zufall (echte Fotografie, Archiv) als 1024-Byte-Schlüssel verwendbar.
+  Für höchste statistische Qualität empfiehlt sich eine bereits verschlüsselte
+  .tur-Datei als Schlüsseldatei. Entartete Schlüsseldateien (einfarbige oder
+  synthetische Bilder, mit Nullen aufgefüllte Dateien) werden beim
+  Verschlüsseln abgelehnt.
 - **Kryptografisch zufälliger IV** für jede Datei (keine zwei Outputs identisch)
 - **Stop-Go-getakteter Schieberegister-Cipher**, strukturell verwandt mit Trivium
-- **CFB-ähnliche Block-Verkettung** — jede Manipulation am Chiffretext
-  zerstört alle nachfolgenden Klartext-Bytes (faktische
-  Manipulationserkennung ohne expliziten MAC)
+- **Integritätsschutz: HMAC-SHA-384, Encrypt-then-MAC** (aktueller
+  Quellstand, Dateiversionen `0x08`/`0x09`) — der Tag wird geprüft, bevor
+  Klartext geschrieben wird; eine manipulierte Datei oder ein falscher
+  Schlüssel wird ohne Ausgabe abgewiesen.
+  *Korrektur:* Frühere Fassungen dieser README behaupteten, die
+  Block-Verkettung allein liefere eine „faktische Manipulationserkennung".
+  Tests im September 2026 haben gezeigt, dass das **nicht stimmt** — gezielte
+  Änderungen können unbemerkt bleiben. Dateien älterer Versionen
+  (`0x00`–`0x07`) haben **keine** Manipulationserkennung.
+  Siehe [SECURITY.md](SECURITY.md) und [CHANGELOG.md](CHANGELOG.md).
 - **Keine Hintertür, kein Generalschlüssel** — durch Quellcode-Lektüre überprüfbar
 
 ---

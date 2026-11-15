@@ -79,27 +79,75 @@ namespace Turbine
             return distinct >= 64 && ent >= 6.0;
         }
 
+        /// HMAC-SHA-384 ueber die ersten 'count' Bytes der Datei, blockweise gelesen
+        /// (kein Voll-Laden in den RAM -> auch Dateien >= 2 GB, konstanter Speicherbedarf).
+        private static byte[] ComputeFileMac(string path, byte[] kmac, long count)
+        {
+            using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 1 << 16))
+            using (var h = new HMACSHA384(kmac))
+            {
+                byte[] buf = new byte[1 << 16];
+                long remaining = count;
+                while (remaining > 0)
+                {
+                    int n = fs.Read(buf, 0, (int)Math.Min(buf.Length, remaining));
+                    if (n <= 0) throw new IOException("Datei kuerzer als erwartet (MAC).");
+                    h.TransformBlock(buf, 0, n, null, 0);
+                    remaining -= n;
+                }
+                h.TransformFinalBlock(buf, 0, 0);
+                return h.Hash;
+            }
+        }
+
+        /// Prueft den 48-Byte-Tag am Dateiende gegen den HMAC ueber alles davor
+        /// (konstant-zeitig). false bei zu kurzer Datei.
+        private static bool VerifyFileMac(string path, byte[] kmac)
+        {
+            long len = new FileInfo(path).Length;
+            if (len < 70 + MAC_TAG_LEN) return false;
+            byte[] calc = ComputeFileMac(path, kmac, len - MAC_TAG_LEN);
+            byte[] tag = new byte[MAC_TAG_LEN];
+            using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                fs.Seek(len - MAC_TAG_LEN, SeekOrigin.Begin);
+                int got = 0;
+                while (got < MAC_TAG_LEN)
+                {
+                    int n = fs.Read(tag, got, MAC_TAG_LEN - got);
+                    if (n <= 0) return false;
+                    got += n;
+                }
+            }
+            return MacConstantTimeEquals(calc, tag);
+        }
+
         /// Encrypt-then-MAC: HMAC-SHA-384 ueber die gesamte fertige Datei, 48-B-Tag anhaengen.
         private void AppendMac(string path)
         {
             byte[] kmac = DeriveMacKey();
-            byte[] all = File.ReadAllBytes(path);
-            byte[] tag;
-            using (var h = new HMACSHA384(kmac)) tag = h.ComputeHash(all);
+            byte[] tag = ComputeFileMac(path, kmac, new FileInfo(path).Length);
             using (var fs = new FileStream(path, FileMode.Append, FileAccess.Write)) fs.Write(tag, 0, MAC_TAG_LEN);
         }
 
         /// Verify-before-decrypt: Tag ueber Datei[0..len-48] neu rechnen, konstant-zeitig vergleichen.
         private bool VerifyMac(string path)
         {
-            byte[] kmac = DeriveMacKey();
-            byte[] all = File.ReadAllBytes(path);
-            if (all.Length < 70 + MAC_TAG_LEN) return false;
-            int bodyLen = all.Length - MAC_TAG_LEN;
-            byte[] body = new byte[bodyLen]; Array.Copy(all, 0, body, 0, bodyLen);
-            byte[] tag = new byte[MAC_TAG_LEN]; Array.Copy(all, bodyLen, tag, 0, MAC_TAG_LEN);
-            byte[] calc; using (var h = new HMACSHA384(kmac)) calc = h.ComputeHash(body);
-            return MacConstantTimeEquals(calc, tag);
+            return VerifyFileMac(path, DeriveMacKey());
+        }
+
+        /// Nach einem fruehen Abbruch in DoWork (MAC-Fehler, Key-File abgelehnt): Zustand und
+        /// Anzeige zuruecksetzen. Ohne das bleibt prozess_laueft gesetzt und START / Wipe
+        /// reagieren bis zum Programm-Neustart nicht mehr. Nur vom UI-Thread aufrufen.
+        private void ResetAfterAbort()
+        {
+            prozess_laueft = false;
+            flame_aus();
+            label5.Foreground = System.Windows.Media.Brushes.Black;
+            SetBurningLogo(false);
+            image6.Visibility = System.Windows.Visibility.Hidden;
+            image1.Visibility = System.Windows.Visibility.Visible;
+            progressBar1.Value = 0;
         }
     }
 }

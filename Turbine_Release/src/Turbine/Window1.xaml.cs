@@ -4143,6 +4143,7 @@ namespace Turbine
             if (MacFailed)
             {
                 MacFailed = false;
+                ResetAfterAbort();
                 ShowFg("Integritaetspruefung fehlgeschlagen - Datei wurde manipuliert oder der Schluessel ist falsch. Es wurde keine Ausgabe erzeugt.");
                 return;
             }
@@ -4150,6 +4151,7 @@ namespace Turbine
             if (LowEntropyKeyReject)
             {
                 LowEntropyKeyReject = false;
+                ResetAfterAbort();
                 ShowFg("Dieses Key-File hat zu wenig Zufall - bitte eine echte Fotografie verwenden (kein einfarbiges/synthetisches Bild). Es wurde nichts verschluesselt.");
                 return;
             }
