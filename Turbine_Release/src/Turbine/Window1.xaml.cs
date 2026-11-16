@@ -174,6 +174,10 @@ namespace Turbine
         public Window1()
         {
             InitializeComponent();
+            // Hinweis: Abbruch ist vorbereitet (WorkerSupportsCancellation, CancellationPending-
+            // Abfragen in den DoWork-Schleifen), wird aber nirgends ausgeloest - es gibt keinen
+            // CancelAsync-Aufruf und keinen Abbrechen-Knopf. Bewusst unveraendert gelassen
+            // (harmlos; ein echter Abbruch muesste halb geschriebene Ausgabedateien behandeln).
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.backgroundWorker1.WorkerReportsProgress = true;
             this.backgroundWorker1.WorkerSupportsCancellation = true;

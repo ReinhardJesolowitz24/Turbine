@@ -6,8 +6,26 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ---
 
-## [Unreleased] — Documentation
+## [Unreleased]
 
+### Code (no format change, no binary rebuilt yet)
+- `GatherJitterEntropy` now disposes the `Process` object it creates for the
+  process id (it held an OS handle until garbage collection). IV output is
+  unchanged in kind; verified with the IV self-test (20 000 IVs, χ² 256.3,
+  0 duplicates, backdoor demo still varies) and 5 000 IVs from the production
+  build without handle growth.
+- Comment added at the BackgroundWorker setup: cancellation is prepared but never
+  triggered (no `CancelAsync`, no cancel button); deliberately left unchanged.
+
+### Documentation
+- **Downgrade (SECURITY):** stripping the MAC and setting the version byte back
+  to 0x06/0x07 yields random garbage, not attacker-chosen content (different
+  S-box); verified 2026-11 (0.9 % matching bytes). Strict mode deliberately not
+  built; users are told to keep the `.tur` if a decryption produces garbage.
+- **README / README_DE:** new recommendations — store the key photo apart from
+  the encrypted files (key-file mode has no password and no slow KDF), and
+  re-encrypt old files with V6. Documentation list now links `IV_HARDENING.md`
+  and `AI_DEFENSIVE_REVIEW.md`.
 - **Clocking description corrected** (README, README_DE, CRYPTANALYSIS,
   COMPARISON_WITH_RC4): Turbine is not stop-go clocked. The `takt` counter
   clocks exactly one wheel type per output byte in a fixed round-robin

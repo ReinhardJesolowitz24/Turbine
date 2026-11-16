@@ -193,8 +193,17 @@ provided from V6 on:
   files rejected with no output.
 - **Residual (downgrade):** an attacker can strip the MAC by editing the version
   byte back to 0x06/0x07 — this *removes* authentication but cannot *forge* a
-  valid tag. An optional future "strict mode" (accept only 0x08/0x09) would close
-  this.
+  valid tag. It also gives the attacker **no control over the result**: 0x08/0x09
+  use the AES-disjoint S-box (`0x1F3`), the older formats the `0x11D` S-box, so a
+  downgraded file decrypts into **random garbage**, not into chosen content.
+  *Verified (2026-11):* a 0x09 file with the tag cut off and the version byte set
+  to 0x07 decrypted to 0.9 % matching bytes (≈ 1/256, chance level). Turbine
+  cannot warn in this case, because 0x06/0x07 carry no tag to check. **If a
+  decryption produces garbage, keep the `.tur` file** — it was damaged,
+  downgraded or decrypted with the wrong key. A "strict mode" (accept only
+  0x08/0x09) was considered and **deliberately not built**: it would block every
+  legacy file while the downgrade gains the attacker nothing beyond destroying
+  the file, which deleting it would do as well.
 
 Older files (0x00–0x07) remain unauthenticated; re-encrypt important files with
 V6 to gain integrity protection.

@@ -68,7 +68,8 @@ namespace Turbine
             }
             sb.Append('#').Append(acc);                       // verhindert Wegoptimieren der Schleife
             sb.Append('|').Append(Environment.TickCount);
-            sb.Append('|').Append(System.Diagnostics.Process.GetCurrentProcess().Id);
+            using (var proc = System.Diagnostics.Process.GetCurrentProcess())   // Process haelt ein OS-Handle -> freigeben
+                sb.Append('|').Append(proc.Id);
             sb.Append('|').Append(System.Threading.Thread.CurrentThread.ManagedThreadId);
             sb.Append('|').Append(DateTime.UtcNow.Ticks);
             sb.Append('|').Append(GC.GetTotalMemory(false));

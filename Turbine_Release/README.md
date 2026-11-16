@@ -100,6 +100,14 @@ For nation-state-level threats, use established standards (AES-GCM, age, etc.).
 - **Use a long password.** 16+ random characters, or a memorable passphrase
   of 4-5 unrelated words. The longer, the better.
 - **Don't reuse passwords.** Each file should have its own.
+- **Key-file mode: store the key photo apart from the encrypted files.** In
+  key-file mode the photo *is* the key — there is no password and no slow key
+  derivation in between. Anyone who has both the photo and the `.tur` file can
+  decrypt it immediately. Keep the photo on a different medium than the data
+  and never send both through the same channel.
+- **Re-encrypt old files with V6.** Files from earlier versions (format bytes
+  `0x00`–`0x07`) have no integrity check. If a decryption ever produces
+  garbage, keep the `.tur` file — see [SECURITY.md](SECURITY.md).
 - **Keep the source code close.** The transparency is part of the security:
   if you can read the source (or have someone you trust read it), you can
   verify there are no hidden surprises.
@@ -112,6 +120,8 @@ For nation-state-level threats, use established standards (AES-GCM, age, etc.).
 - **[CRYPTANALYSIS.md](CRYPTANALYSIS.md)** — Full cryptanalytic review (2026)
 - **[NIST_TEST_RESULTS.md](NIST_TEST_RESULTS.md)** — Raw NIST STS test data
 - **[COMPARISON_WITH_RC4.md](COMPARISON_WITH_RC4.md)** — Detailed comparison with RC4 (most important read)
+- **[IV_HARDENING.md](IV_HARDENING.md)** — Diffusion study and the hardened per-file IV
+- **[AI_DEFENSIVE_REVIEW.md](AI_DEFENSIVE_REVIEW.md)** — How AI-assisted review found and fixed real issues, and what it does not prove
 - **[CHANGELOG.md](CHANGELOG.md)** — Version history
 
 ---

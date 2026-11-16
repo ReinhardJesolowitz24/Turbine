@@ -105,6 +105,15 @@ Für staatliche Bedrohungen sind etablierte Standards (AES-GCM, age) zu wählen.
 - **Lange Passwörter verwenden.** 16+ zufällige Zeichen, oder eine merkbare
   Phrase aus 4-5 zusammenhanglosen Wörtern. Je länger, desto besser.
 - **Passwörter nicht wiederverwenden.** Jede Datei sollte ihr eigenes haben.
+- **Key-File-Modus: das Schlüsselfoto getrennt von den verschlüsselten Dateien
+  aufbewahren.** Im Key-File-Modus *ist* das Foto der Schlüssel — es gibt kein
+  Passwort und keine langsame Schlüsselableitung dazwischen. Wer Foto und
+  `.tur`-Datei hat, kann sofort entschlüsseln. Das Foto auf einem anderen
+  Datenträger als die Daten lagern und nie beides über denselben Weg verschicken.
+- **Alte Dateien mit V6 neu verschlüsseln.** Dateien früherer Versionen
+  (Formatbytes `0x00`–`0x07`) haben keine Integritätsprüfung. Kommt beim
+  Entschlüsseln einmal nur Datenmüll heraus, die `.tur`-Datei behalten — siehe
+  [SECURITY.md](SECURITY.md).
 - **Den Quellcode aufheben.** Die Transparenz gehört zur Sicherheit:
   wer den Code lesen kann (oder jemandem vertraut, der das tut), kann
   überprüfen, dass keine versteckten Überraschungen drin sind.
@@ -117,6 +126,8 @@ Für staatliche Bedrohungen sind etablierte Standards (AES-GCM, age) zu wählen.
 - **[CRYPTANALYSIS.md](CRYPTANALYSIS.md)** — Vollständige Kryptanalyse (2026)
 - **[NIST_TEST_RESULTS.md](NIST_TEST_RESULTS.md)** — Rohwerte der NIST-STS-Tests
 - **[COMPARISON_WITH_RC4.md](COMPARISON_WITH_RC4.md)** — Detaillierter Vergleich mit RC4 (wichtigste Lektüre)
+- **[IV_HARDENING.md](IV_HARDENING.md)** — Diffusionsstudie und gehärteter IV pro Datei (englisch)
+- **[AI_DEFENSIVE_REVIEW.md](AI_DEFENSIVE_REVIEW.md)** — Wie ein KI-gestütztes Review echte Schwachstellen fand und behob, und was es nicht beweist (englisch)
 - **[CHANGELOG.md](CHANGELOG.md)** — Versionshistorie
 
 ---
