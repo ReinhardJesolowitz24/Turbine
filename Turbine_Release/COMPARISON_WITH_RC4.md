@@ -85,7 +85,7 @@ point for the WEP attack: short, related keys (as used in WEP's
 | **Year of origin** | 1987 | 2012 |
 | **Internal state size** | 2,064 bits (256-byte S-box + 2 indices) | 1,280 bits (4 parallel gear groups) |
 | **State distribution** | Monolithic (one shared state) | 4 parallel sub-states, XOR-combined |
-| **Cipher family** | S-box permutation cipher | Stop-go-clocked LFSR cipher |
+| **Cipher family** | S-box permutation cipher | Shift-register cipher (fixed clocking schedule, nonlinear feedback) |
 | **Closest modern relative** | (none — design was unique) | Trivium (eSTREAM portfolio) |
 | **Documented biases** | Dozens, accumulated over 25 years | One strong (Bit 6↔7), one borderline (Bit 2↔3) |
 | **Bias combinability** | YES — proved to enable practical attacks | **NO** — biases statistically independent (Z = -0.09) |
@@ -152,7 +152,7 @@ roughly squaring the work compared to attacking a single group.
 ### 5.2 Younger cipher family
 
 RC4 is in the S-box-permutation family (essentially a category of one).
-Turbine is in the stop-go-clocked LFSR family — the same family as:
+Turbine is in the shift-register (LFSR/NFSR) family — the same broad family as:
 
 - **Trivium** (eSTREAM portfolio winner, currently considered secure)
 - **Grain-128a** (also still secure)

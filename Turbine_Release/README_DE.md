@@ -36,7 +36,9 @@ unverdächtig und unauffällig auf der Festplatte.
   synthetische Bilder, mit Nullen aufgefüllte Dateien) werden beim
   Verschlüsseln abgelehnt.
 - **Kryptografisch zufälliger IV** für jede Datei (keine zwei Outputs identisch)
-- **Stop-Go-getakteter Schieberegister-Cipher**, strukturell verwandt mit Trivium
+- **Byteorientierter Schieberegister-Cipher** mit festem Taktschema (pro
+  Ausgabebyte wird reihum genau eine Zahnradgruppe getaktet) und
+  zustandsabhängiger nichtlinearer Rückkopplung, strukturell verwandt mit Trivium
 - **Integritätsschutz: HMAC-SHA-384, Encrypt-then-MAC** (aktueller
   Quellstand, Dateiversionen `0x08`/`0x09`) — der Tag wird geprüft, bevor
   Klartext geschrieben wird; eine manipulierte Datei oder ein falscher

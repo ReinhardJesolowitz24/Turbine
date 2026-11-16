@@ -33,7 +33,9 @@ naive content filters and looks unremarkable on disk.
   key. Degenerate key files (solid-colour or synthetic images, zero-padded
   files) are rejected on encryption.
 - **Cryptographically random IV** for every file (no two outputs are identical)
-- **Stop-go-clocked shift register** design, structurally related to Trivium
+- **Byte-oriented shift-register** design with a fixed clocking schedule
+  (one gear group per output byte, round-robin) and state-dependent
+  nonlinear feedback, structurally related to Trivium
 - **Integrity protection: HMAC-SHA-384, Encrypt-then-MAC** (current source,
   file versions `0x08`/`0x09`) — the tag is verified before any plaintext is
   written; a tampered file or a wrong key is rejected with no output.

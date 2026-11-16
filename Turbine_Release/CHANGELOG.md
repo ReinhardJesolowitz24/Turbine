@@ -6,6 +6,23 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ---
 
+## [Unreleased] — Documentation
+
+- **Clocking description corrected** (README, README_DE, CRYPTANALYSIS,
+  COMPARISON_WITH_RC4): Turbine is not stop-go clocked. The `takt` counter
+  clocks exactly one wheel type per output byte in a fixed round-robin
+  schedule (Rad 1: takt 0–8, Rad 2: 9–15, Rad 3: 16–19; period 19 after the
+  first 20-byte cycle). The schedule does not depend on key or data; the state
+  dependence lies in the feedback values. No code change.
+- **CRYPTANALYSIS §1.3:** the block feedback checksums (`block_quersumme`,
+  `block_summe`) are computed over the **ciphertext**, not the plaintext. Body
+  text, heading, mode table and §7.1 now say so; the GCM comparison is
+  withdrawn and the source line references are updated.
+- **IV_HARDENING:** correction box on the motivation (with all-zero plaintext
+  the checksums are *not* trivial, since ciphertext = keystream; the study's
+  question and results stand) and the old "de-facto tamper detection" sentence
+  replaced by a correction note pointing to the MAC.
+
 ## [V6.0 — Release] — 2026-11-16
 
 First binary release containing all V6 changes listed below (integrity MAC,

@@ -9,12 +9,13 @@ output (encryption of all-zero plaintext) plus code-level review.
 
 ## Executive summary
 
-Turbine is a stream cipher of the **stop-go-clocked shift register**
-family with a **CFB-like (Cipher Feedback) operating mode** that
-includes a plaintext-derived checksum chained across blocks (see
-section 1.3). Structurally most similar to A5/1 (GSM), E0 (Bluetooth),
-and Trivium (eSTREAM portfolio) for the keystream generator, and to
-NIST CFB-mode for the block-feedback construction.
+Turbine is a stream cipher of the **shift register** family with a
+**fixed clocking schedule** (see section 1.1) and a **CFB-like (Cipher
+Feedback) operating mode** that includes a ciphertext-derived checksum
+chained across blocks (see section 1.3). Structurally most similar to
+A5/1 (GSM), E0 (Bluetooth), and Trivium (eSTREAM portfolio) for the
+keystream generator, and to NIST CFB-mode for the block-feedback
+construction.
 
 Compared to RC4, the cipher Turbine most closely resembles in operational
 profile, Turbine shows **structural advantages**: smaller number of
@@ -64,10 +65,14 @@ Multi-stage mixing function
     │ + 16-byte IV (RNGCryptoServiceProvider, stored in BMP container)
     │
     ▼
-Stop-go clocking based on `takt` counter:
-    - Rad 1 (gear_a): rotates every cycle
-    - Rad 2 (gear_b): rotates conditionally
-    - Rad 3 (gear_c): rotates only when `takt >= 16`
+Fixed round-robin clocking by the `takt` counter —
+exactly one wheel type is clocked per output byte:
+    - Rad 1 (gear_a): takt 0–8
+    - Rad 2 (gear_b): takt 9–15
+    - Rad 3 (gear_c): takt 16–19, then takt restarts at 1
+    (first cycle 20 bytes, then period 19 bytes; the schedule does
+    not depend on key or data — the state dependence is in the
+    feedback values, e.g. the conditional 0xFF inversion in Rad 1)
     │
     ▼
 XOR tree combining all 4 gear groups → 1 output byte
@@ -78,7 +83,10 @@ ciphertext_byte = plaintext_byte XOR keystream_byte
 
 ### 1.2 Classification
 
-This is a **byte-oriented, multi-stream stop-go-clocked shift register cipher**.
+This is a **byte-oriented, multi-stream shift register cipher with a fixed
+clocking schedule and nonlinear, state-dependent feedback**. It is *not*
+stop-go clocked in the A5/1 sense: whether a register moves never depends
+on its contents, only on the position in the 19-byte schedule.
 It belongs to the LFSR/NFSR family (not the SP-network family of AES, not the
 ARX family of ChaCha20).
 
@@ -86,14 +94,14 @@ ARX family of ChaCha20).
 |---|---|---|
 | SP-Network | AES, Serpent | Not related |
 | ARX | ChaCha20, Salsa20 | Not related |
-| **Stop-Go LFSR + Combiner** | A5/1, E0, Trivium, Grain | **Same family** |
+| **Shift register (LFSR/NFSR) + combiner** | A5/1, E0, Trivium, Grain | **Same broad family** |
 
 Trivium is an eSTREAM-portfolio cipher and currently considered secure.
 A5/1 and E0 have been broken — but their internal states were 64 and
 128 bits respectively (vs Turbine's 1280 bits) and their LFSR rotations
 were bit-oriented (vs Turbine's byte-oriented).
 
-### 1.3 Operating mode: Plaintext-feedback (CFB-like)
+### 1.3 Operating mode: Ciphertext-feedback (CFB-like)
 
 **Added 2026-05-18 — correction to earlier analysis.**
 
@@ -106,11 +114,14 @@ NIST SP 800-38A.
 #### How the feedback works
 
 Turbine processes ciphertext in 8-byte blocks (`block_laenge`). After
-each block, two running checksums are computed over the plaintext bytes
-just decrypted (or just encrypted):
+each block, two running checksums are computed over the **ciphertext**
+bytes of that block — on encryption over the block just produced, on
+decryption over the block before it is decrypted (so both sides see
+the same bytes):
 
 ```csharp
-// In Window1.xaml.cs around line 3200-3206:
+// In Window1.xaml.cs around line 3567-3572 (encryption path;
+// zeichenbuffer holds the finished ciphertext block here):
 for (int schieber2 = 0; schieber2 < block_laenge; schieber2++)
 {
     block_quersumme = (byte)(block_quersumme ^ zeichenbuffer[schieber2]);  // XOR-checksum
@@ -122,10 +133,10 @@ block_quersumme = (byte)(block_quersumme ^ gear_ergebnisd2_3 ^ ... ^ block_summe
 These checksums then influence the **next** block's processing:
 
 ```csharp
-// Lines 3098, 3100: Block rotation uses previous block's checksum
+// Lines 3464, 3466: Block rotation uses previous block's checksum
 zeichenbuffer[schieber2] = (byte)(zeichenbuffer[schieber2 - 1] ^ block_quersumme);
 
-// Line 3104: Number of bit-shift iterations depends on previous checksum
+// Line 3470: Number of bit-shift iterations depends on previous checksum
 for (int schieber = 0;
      schieber < ((gear_ergebnisc3_3 ^ gear_ergebnisc4_3 ^ block_quersumme) & 0xf);
      schieber++)
@@ -150,22 +161,22 @@ by any single difference, not by manipulation magnitude.
 
 #### Classification in standard mode terminology
 
-| Mode | Plaintext feedback? | Tamper propagation |
+| Mode | Feedback | Tamper propagation |
 |---|---|---|
 | ECB | No | One block only |
 | CBC | Previous ciphertext | Current block + 1 bit flip in next |
-| **CFB** | **Plaintext via cipher** | **To end of file** |
+| **CFB** | **Previous ciphertext via cipher** | Current segment + next block |
 | OFB | Cipher output only | Bit-position only |
 | CTR | None (synchronous) | Bit-position only |
-| **Turbine** | **Plaintext checksum (`block_quersumme`)** | **To end of file** (CFB-like) |
+| **Turbine** | **Running ciphertext checksum (`block_quersumme`)** | Long stretch, then re-synchronises (see correction below) |
 
-Turbine's mode is most closely related to **CFB**, with an additional
-twist: the feedback uses both an **XOR checksum** and an **additive
-checksum** of the plaintext bytes, both mixed with concurrent gear-state
-values. This is mathematically more complex than standard CFB and
-qualitatively closer to AEAD modes like **GCM**, which also use
-plaintext-derived authentication tags (though GCM uses Galois multiplication
-where Turbine uses simpler XOR+addition).
+Turbine's mode is most closely related to **CFB**: like CFB it feeds
+ciphertext back into the keystream generation. The feedback uses both an
+**XOR checksum** and an **additive checksum** of the ciphertext bytes,
+both mixed with concurrent gear-state values. Because the attacker can
+read the ciphertext, this checksum is **not** an authentication tag (an
+earlier comparison with GCM was misleading and is withdrawn — see the
+correction box below).
 
 #### Security implications
 
@@ -531,7 +542,7 @@ combinable biases.
 | Documented biases | Dozens (Mantin, Fluhrer-McGrew, ABSAB, ...) | One strong (Bit 6→7), one borderline (Bit 2→3) |
 | Bias independence | Combinable (proved over 14 years of research) | Independent (Z = -0.09) |
 | Cross-byte correlations | Multiple known | None detected |
-| Cipher family | S-box permutation | Stop-go LFSR |
+| Cipher family | S-box permutation | Shift register, fixed clocking |
 | Real-world break | Yes (WEP, TLS-RC4) | None publicly known |
 | Public peer review | 25+ years, hundreds of researchers | First external review 2026 |
 
@@ -566,7 +577,7 @@ fundamentally different league than tools that ship serious bugs.
 ### 7.1 What this review establishes
 
 - Turbine is a **functionally correct** stream cipher with a **CFB-like
-  feedback mode** (plaintext-checksum chained across blocks, see 1.3)
+  feedback mode** (ciphertext checksum chained across blocks, see 1.3)
 - Its construction is **structurally sound** for its threat model
 - A single localized bias was identified, traced to specific lines, and
   documented in code comments

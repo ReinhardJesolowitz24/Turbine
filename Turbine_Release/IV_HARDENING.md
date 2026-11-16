@@ -3,7 +3,7 @@
 **Date:** 2026-07-08
 **Reviewer:** AI-assisted analysis (Anthropic Claude — *Fable 5* for the fresh
 framing, *Opus 4.8* for execution)
-**Scope:** A differential/diffusion study of Turbine's plaintext-feedback path,
+**Scope:** A differential/diffusion study of Turbine's block-feedback path,
 and the design decision it motivated: hardening the per-file IV generation.
 
 ---
@@ -18,6 +18,15 @@ plaintext, see `NIST_TEST_RESULTS.md`) never exercises the cipher's
 diffusion is never measured. The open question: **how does a single-bit
 plaintext change actually diffuse into the ciphertext, and is any weakness
 structural (fixed location) or data-dependent (moves with the plaintext)?**
+
+> **Correction (2026-11):** the block checksums are computed over the
+> **ciphertext**, not the plaintext (see `CRYPTANALYSIS.md` §1.3). With all-zero
+> plaintext the ciphertext equals the keystream, so the checksums are **not**
+> trivial and the feedback is active in the NIST runs. What those runs do not
+> measure is how a *plaintext change* diffuses. That question, the
+> differential method and all results below remain valid; only the reason
+> given here ("checksums trivial") was wrong. The feedback is
+> plaintext-*dependent* only indirectly, through the ciphertext.
 
 To answer this we built an isolated test environment, ran a large differential
 sweep, and instrumented the cipher's internal feedback state. The findings:
@@ -87,9 +96,13 @@ Error-propagation window over 16,384 flips: **median 1392 B, mean 1593 B**
 the mixing behavior that the all-zero statistic could never show: bounded,
 data-dependent error propagation with re-convergence, i.e. self-synchronizing
 (CFB-like) feedback — as opposed to the full, permanent avalanche of an ideal
-design. Notably, the same feedback gives Turbine its **de-facto tamper
-detection** (`CRYPTANALYSIS.md`): the property is a deliberate trade-off, not a
-flaw.
+design.
+
+> **Correction (2026-09):** an earlier version of this paragraph said that the
+> same feedback gives Turbine "de-facto tamper detection". Testing showed that
+> this is **not true**: crafted edits can pass silently (`CRYPTANALYSIS.md` §1.3).
+> Real integrity protection exists only since file versions `0x08`/`0x09`
+> (HMAC-SHA-384, Encrypt-then-MAC); see `SECURITY.md`.
 
 ---
 
