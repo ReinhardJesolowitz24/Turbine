@@ -208,7 +208,7 @@ provided from V6 on:
 Older files (0x00–0x07) remain unauthenticated; re-encrypt important files with
 V6 to gain integrity protection.
 
-### Key file + passphrase (format 0x0A, current source / upcoming V6.1)
+### Key file + passphrase (format 0x0A, V6.1)
 
 Possession **and** knowledge: the file can only be decrypted with the key file
 **and** the passphrase.

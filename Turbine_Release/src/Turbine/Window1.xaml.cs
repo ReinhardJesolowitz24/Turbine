@@ -4699,7 +4699,7 @@ namespace Turbine
 
         private void button4_Click(object sender, RoutedEventArgs e)
         {
-            ShowFg("Turbine V6.0 is a free encryption program.\n\n" +
+            ShowFg("Turbine V6.1 is a free encryption program.\n\n" +
                 "Cipher: 1280-bit internal state across 4 parallel gear groups,\n" +
                 "shift register design (related family: Trivium).\n\n" +
                 "Key derivation:\n" +

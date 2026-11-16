@@ -1,16 +1,20 @@
-# Turbine V6.0
+# Turbine V6.1
 
 A free, open-source file encryption tool for personal use.
 Originally developed in 2012 by **Reinhard Jesolowitz** as a way to protect
 personal data — passwords, login files, sensitive documents — against
 casual access (e.g., a lost USB stick).
 
-**Current version: V6.0** (2026-11) — adds authenticated integrity
+**Current version: V6.1** (2026-11) — adds the combined **key file +
+passphrase** mode (file version `0x0A`): both go into the slow KDF, so a
+stolen key file alone is not enough. V6.0 introduced authenticated integrity
 (HMAC-SHA-384, Encrypt-then-MAC, file versions `0x08`/`0x09`), an AES-disjoint
 S-box, a hardened per-file IV and a guard against degenerate key files.
-**Fully backward compatible:** V6.0 decrypts every older Turbine file.
-**Not forward compatible:** files written by V6.0 can **not** be opened with
-V5.x — update every installation you use before you exchange files.
+**Fully backward compatible:** V6.1 decrypts every older Turbine file.
+**Not forward compatible:** files in the new key file + passphrase mode
+(`0x0A`) can **not** be opened with V6.0 or older; files in the other modes
+still open in V6.0. Update every installation you use before you exchange
+files.
 
 > *Looking for the German version? See [README_DE.md](README_DE.md).*
 
@@ -36,7 +40,7 @@ naive content filters and looks unremarkable on disk.
   mode (no compression) contains the original files unchanged — if those are
   text or other predictable data, the bytes Turbine reads may be plain text.
   The entropy guard only catches extreme cases, not every predictable file.
-- **Key file + passphrase** (current source, upcoming V6.1, format `0x0A`) —
+- **Key file + passphrase** (V6.1, format `0x0A`) —
   load the key file, then type a passphrase. Both go **into** the slow
   PBKDF2 key derivation, so every guess of a (key file, passphrase) pair costs
   a full PBKDF2 run. A stolen stick together with the photo is not enough
@@ -62,7 +66,7 @@ naive content filters and looks unremarkable on disk.
 
 ## Quick start (using the pre-built binary)
 
-**Direct download:** [Turbine.exe (V6.0, ~300 KB)](https://github.com/ReinhardJesolowitz24/Turbine/releases/download/v6.0.0/Turbine.exe) — verify it against `SHA256SUMS.txt` on the [release page](https://github.com/ReinhardJesolowitz24/Turbine/releases/tag/v6.0.0)
+**Direct download:** [Turbine.exe (V6.1, ~300 KB)](https://github.com/ReinhardJesolowitz24/Turbine/releases/download/v6.1.0/Turbine.exe) — verify it against `SHA256SUMS.txt` on the [release page](https://github.com/ReinhardJesolowitz24/Turbine/releases/tag/v6.1.0)
 
 1. Save `Turbine.exe` to any folder
 2. Double-click to launch (no installation needed — portable)
@@ -76,7 +80,7 @@ load the same key file) and click **START**.
 
 **Requires:** Windows + .NET Framework 4.8 (already installed on Windows 10/11).
 
-> *Alternatively, you can clone the whole repository or download the source-code ZIP from the [Releases page](https://github.com/ReinhardJesolowitz24/Turbine/releases/tag/v6.0.0) — the binary is also included under `Turbine_Release/binary/`.*
+> *Alternatively, you can clone the whole repository or download the source-code ZIP from the [Releases page](https://github.com/ReinhardJesolowitz24/Turbine/releases/tag/v6.1.0) — the binary is also included under `Turbine_Release/binary/`.*
 
 ---
 

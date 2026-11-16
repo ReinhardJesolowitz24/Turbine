@@ -6,7 +6,24 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ---
 
-## [Unreleased] — planned V6.1
+## [V6.1 — Release] — 2026-11-16
+
+Binary release `v6.1.0` with the changes listed in this section.
+
+- **Compatibility:** V6.1 reads every older Turbine file (`0x00`–`0x0A`).
+  New files: `0x08` (password), `0x09` (key file), `0x0A` (key file +
+  passphrase). **V6.0 and older cannot read `0x0A`**; `0x08`/`0x09` files
+  written by V6.1 still open in V6.0.
+- Version: window title, logo, About dialog and assembly version 6.0 → 6.1.
+  README / README_DE: version header and download links (now `v6.1.0`).
+- **Release acceptance (GUI, 2026-11-16, build identical to the release
+  except version strings and logos):** combined mode `0x0A` round trip
+  byte-exact; key file without passphrase, passphrase without key file, wrong
+  passphrase, wrong key file, too short passphrase/password → message, no
+  output; `0x09` and `0x08` round trips; a V6.0 `0x09` file decrypts; key-file
+  name and all messages (English) checked visually. Test build of the V6.1
+  source: `0x0A` round trip byte-exact, KDF time ≈ 6 s (same as password
+  mode).
 
 ### New: key file + passphrase (format `0x0A`)
 - Load a key file, then type a passphrase → the file is written as `0x0A` and

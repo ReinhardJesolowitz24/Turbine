@@ -1,17 +1,21 @@
-# Turbine V6.0
+# Turbine V6.1
 
 Ein kostenloses, quelloffenes Werkzeug zur Datei-Verschlüsselung für den
 persönlichen Gebrauch. Ursprünglich 2012 entwickelt von **Reinhard Jesolowitz**,
 um persönliche Daten — Passwörter, Login-Dateien, sensible Dokumente — vor
 zufälligem Zugriff zu schützen (z.B. bei einem verlorenen USB-Stick).
 
-**Aktuelle Version: V6.0** (2026-11) — mit Integritätsschutz (HMAC-SHA-384,
-Encrypt-then-MAC, Dateiversionen `0x08`/`0x09`), einer zur AES-S-Box disjunkten
-S-Box, gehärtetem IV pro Datei und einem Schutz gegen entartete Schlüsseldateien.
-**Vollständig abwärtskompatibel:** V6.0 entschlüsselt jede ältere Turbine-Datei.
-**Nicht vorwärtskompatibel:** Mit V6.0 erzeugte Dateien lassen sich mit V5.x
-**nicht** öffnen — bitte alle genutzten Installationen aktualisieren, bevor
-Dateien ausgetauscht werden.
+**Aktuelle Version: V6.1** (2026-11) — neu ist der kombinierte Modus
+**Key-File + Passphrase** (Dateiversion `0x0A`): Beides geht in die langsame
+Schlüsselableitung, ein gestohlenes Key-File allein reicht also nicht. Seit
+V6.0: Integritätsschutz (HMAC-SHA-384, Encrypt-then-MAC, Dateiversionen
+`0x08`/`0x09`), eine zur AES-S-Box disjunkte S-Box, gehärteter IV pro Datei
+und ein Schutz gegen entartete Schlüsseldateien.
+**Vollständig abwärtskompatibel:** V6.1 entschlüsselt jede ältere Turbine-Datei.
+**Nicht vorwärtskompatibel:** Dateien im neuen Modus Key-File + Passphrase
+(`0x0A`) lassen sich mit V6.0 und älter **nicht** öffnen; Dateien in den
+anderen Modi öffnet V6.0 weiterhin. Bitte alle genutzten Installationen
+aktualisieren, bevor Dateien ausgetauscht werden.
 
 > *English version: see [README.md](README.md).*
 
@@ -40,7 +44,7 @@ unverdächtig und unauffällig auf der Festplatte.
   unverändert — sind das Texte oder andere vorhersagbare Daten, liest Turbine
   womöglich Klartext. Der Entropie-Wächter fängt nur extreme Fälle ab, nicht
   jede vorhersagbare Datei.
-- **Schlüsseldatei + Passphrase** (aktueller Quellstand, kommende V6.1,
+- **Schlüsseldatei + Passphrase** (V6.1,
   Format `0x0A`) — zuerst die Schlüsseldatei laden, dann eine Passphrase
   eingeben. Beides geht **in** die langsame PBKDF2-Schlüsselableitung ein:
   Jeder Rateversuch eines Paares (Schlüsseldatei, Passphrase) kostet einen
@@ -69,7 +73,7 @@ unverdächtig und unauffällig auf der Festplatte.
 
 ## Schnellstart (mit fertiger EXE)
 
-**Direkter Download:** [Turbine.exe (V6.0, ~300 KB)](https://github.com/ReinhardJesolowitz24/Turbine/releases/download/v6.0.0/Turbine.exe) — bitte mit `SHA256SUMS.txt` auf der [Release-Seite](https://github.com/ReinhardJesolowitz24/Turbine/releases/tag/v6.0.0) abgleichen
+**Direkter Download:** [Turbine.exe (V6.1, ~300 KB)](https://github.com/ReinhardJesolowitz24/Turbine/releases/download/v6.1.0/Turbine.exe) — bitte mit `SHA256SUMS.txt` auf der [Release-Seite](https://github.com/ReinhardJesolowitz24/Turbine/releases/tag/v6.1.0) abgleichen
 
 1. `Turbine.exe` in einen beliebigen Ordner speichern
 2. Per Doppelklick starten (keine Installation nötig — portabel)
@@ -83,7 +87,7 @@ eingeben (oder dieselbe Schlüsseldatei laden) und **START** klicken.
 
 **Voraussetzung:** Windows + .NET Framework 4.8 (bei Windows 10/11 bereits installiert).
 
-> *Alternativ kannst du das gesamte Repository klonen oder den Quellcode-ZIP von der [Releases-Seite](https://github.com/ReinhardJesolowitz24/Turbine/releases/tag/v6.0.0) laden — die Binärdatei liegt zusätzlich unter `Turbine_Release/binary/`.*
+> *Alternativ kannst du das gesamte Repository klonen oder den Quellcode-ZIP von der [Releases-Seite](https://github.com/ReinhardJesolowitz24/Turbine/releases/tag/v6.1.0) laden — die Binärdatei liegt zusätzlich unter `Turbine_Release/binary/`.*
 
 ---
 

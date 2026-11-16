@@ -1,4 +1,4 @@
-# Turbine V6.0
+# Turbine V6.1
 
 A free, open-source file encryption tool for personal use.
 Originally developed in 2012 by **Reinhard Jesolowitz** as a way to protect
