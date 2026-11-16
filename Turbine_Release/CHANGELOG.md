@@ -25,7 +25,8 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 - **README / README_DE:** new recommendations — store the key photo apart from
   the encrypted files (key-file mode has no password and no slow KDF), and
   re-encrypt old files with V6. Documentation list now links `IV_HARDENING.md`
-  and `AI_DEFENSIVE_REVIEW.md`.
+  and `AI_DEFENSIVE_REVIEW.md`. Key-file section warns that archives must be
+  compressed: a ZIP in "store" mode can expose plain text to the key reader.
 - **Clocking description corrected** (README, README_DE, CRYPTANALYSIS,
   COMPARISON_WITH_RC4): Turbine is not stop-go clocked. The `takt` counter
   clocks exactly one wheel type per output byte in a fixed round-robin

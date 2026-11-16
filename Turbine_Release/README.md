@@ -32,6 +32,10 @@ naive content filters and looks unremarkable on disk.
   highest statistical quality, use a previously encrypted .tur file as the
   key. Degenerate key files (solid-colour or synthetic images, zero-padded
   files) are rejected on encryption.
+  *Archives:* only use a **compressed** archive. A ZIP created in "store"
+  mode (no compression) contains the original files unchanged — if those are
+  text or other predictable data, the bytes Turbine reads may be plain text.
+  The entropy guard only catches extreme cases, not every predictable file.
 - **Cryptographically random IV** for every file (no two outputs are identical)
 - **Byte-oriented shift-register** design with a fixed clocking schedule
   (one gear group per output byte, round-robin) and state-dependent

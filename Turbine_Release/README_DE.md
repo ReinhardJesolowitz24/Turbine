@@ -35,6 +35,11 @@ unverdächtig und unauffällig auf der Festplatte.
   .tur-Datei als Schlüsseldatei. Entartete Schlüsseldateien (einfarbige oder
   synthetische Bilder, mit Nullen aufgefüllte Dateien) werden beim
   Verschlüsseln abgelehnt.
+  *Archive:* nur ein **komprimiertes** Archiv verwenden. Ein ZIP im Modus
+  „Speichern" („Store", ohne Kompression) enthält die Originaldateien
+  unverändert — sind das Texte oder andere vorhersagbare Daten, liest Turbine
+  womöglich Klartext. Der Entropie-Wächter fängt nur extreme Fälle ab, nicht
+  jede vorhersagbare Datei.
 - **Kryptografisch zufälliger IV** für jede Datei (keine zwei Outputs identisch)
 - **Byteorientierter Schieberegister-Cipher** mit festem Taktschema (pro
   Ausgabebyte wird reihum genau eine Zahnradgruppe getaktet) und
