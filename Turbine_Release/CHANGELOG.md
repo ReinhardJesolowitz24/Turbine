@@ -6,6 +6,32 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ---
 
+## [V6.0 — Release] — 2026-11-16
+
+First binary release containing all V6 changes listed below (integrity MAC,
+AES-disjoint S-box, key-file entropy guard, review fixes) plus the IV hardening
+from V5.2.1.
+
+- **Compatibility:** V6.0 reads every older Turbine file (`0x00`–`0x09`).
+  New files are written as `0x08` (password) / `0x09` (key file).
+  **V5.x cannot read `0x08`/`0x09`** — update all installations before
+  exchanging files.
+- Version: window title, logo, About dialog and assembly version 5.2 → 6.0;
+  the About dialog now describes the MAC and the key-file guard.
+- README / README_DE: version header, download link (now `v6.0.0`) and the
+  quick start (single **START** button, automatic decryption detection)
+  updated.
+- **Release acceptance (GUI, build of commit `da6e5df`, 2026-11-16 — the V6.0
+  build differs from it only in version strings and logo):** low-entropy key
+  file rejected and START usable afterwards without restart; tampered `0x09`
+  file → integrity dialog, no output, START usable afterwards; password mode
+  `0x08` round trip byte-exact and wrong password → integrity dialog, no
+  output; 0-byte file → 118-byte `.tur` → 0-byte plaintext.
+- Not yet verified on real data: files ≥ 2 GB with MAC (the streaming HMAC
+  was only exercised up to 1 MB).
+
+---
+
 ## [Review fixes] — 2026-11-15
 
 Three findings from a follow-up review of the V6 changes.

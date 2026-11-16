@@ -1,4 +1,4 @@
-# Turbine V5.2
+# Turbine V6.0
 
 A free, open-source file encryption tool for personal use.
 Originally developed in 2012 by **Reinhard Jesolowitz** as a way to protect
@@ -33,9 +33,10 @@ A Windows file encryption tool with a self-developed stream cipher:
 - **1280-bit internal state** distributed across 4 parallel gear groups (Trivium family)
 - **PBKDF2-SHA512** key derivation for password mode (1,200,000 iterations)
 - **SHA-512 whitening** for key-file mode
-- **Custom S-Box** (GF(2^8) inverse, polynomial 0x11D) — same cryptographic strength as AES S-Box but independent values
+- **Integrity protection (V6):** HMAC-SHA-384, Encrypt-then-MAC — a tampered file or a wrong key is rejected before any output is written
+- **Custom S-Box** (GF(2^8) inverse; V6 uses polynomial 0x1F3, zero entries in common with the AES S-Box) — same cryptographic strength as the AES S-Box
 - **NIST SP 800-22 validated** — 17/17 statistical randomness tests passed (10 MB all-zeros input)
-- **Cryptographically random IV** per file, BMP container
+- **Cryptographically random IV** per file (two independent entropy sources), BMP container
 - **No backdoor, no master key** — verifiable by reading the source
 
 ## Threat model

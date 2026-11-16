@@ -1,14 +1,16 @@
-# Turbine V5.0
+# Turbine V6.0
 
 A free, open-source file encryption tool for personal use.
 Originally developed in 2012 by **Reinhard Jesolowitz** as a way to protect
 personal data — passwords, login files, sensitive documents — against
 casual access (e.g., a lost USB stick).
 
-**Current version: V5.0** (2026-05-20) — adds PBKDF2-SHA512 key derivation,
-SHA-512 key-file whitening, full-ASCII Mighty Mouse virtual keyboard, and
-many UI/UX fixes. **Fully backward compatible** with all previous file
-formats (V1, V2, V3 markers).
+**Current version: V6.0** (2026-11) — adds authenticated integrity
+(HMAC-SHA-384, Encrypt-then-MAC, file versions `0x08`/`0x09`), an AES-disjoint
+S-box, a hardened per-file IV and a guard against degenerate key files.
+**Fully backward compatible:** V6.0 decrypts every older Turbine file.
+**Not forward compatible:** files written by V6.0 can **not** be opened with
+V5.x — update every installation you use before you exchange files.
 
 > *Looking for the German version? See [README_DE.md](README_DE.md).*
 
@@ -46,18 +48,21 @@ naive content filters and looks unremarkable on disk.
 
 ## Quick start (using the pre-built binary)
 
-**Direct download:** [Turbine.exe (V5.0, ~292 KB)](https://github.com/ReinhardJesolowitz24/Turbine/releases/download/V5.0/Turbine.exe)
+**Direct download:** [Turbine.exe (V6.0, ~300 KB)](https://github.com/ReinhardJesolowitz24/Turbine/releases/download/v6.0.0/Turbine.exe) — verify it against `SHA256SUMS.txt` on the [release page](https://github.com/ReinhardJesolowitz24/Turbine/releases/tag/v6.0.0)
 
 1. Save `Turbine.exe` to any folder
 2. Double-click to launch (no installation needed — portable)
 3. Select source file, target file (`.tur` extension), enter a password twice
-4. Click **Encrypt** — done
+   (or load a key file)
+4. Click **START** — done
 
-To decrypt: same procedure, with **Decrypt** selected and the original password.
+To decrypt: select the `.tur` file as source — Turbine detects it and switches
+to *Decryption Mode* — choose a target file, enter the original password (or
+load the same key file) and click **START**.
 
 **Requires:** Windows + .NET Framework 4.8 (already installed on Windows 10/11).
 
-> *Alternatively, you can clone the whole repository or download the source-code ZIP from the [Releases page](https://github.com/ReinhardJesolowitz24/Turbine/releases/tag/V5.0) — the binary is also included under `Turbine_Release/binary/`.*
+> *Alternatively, you can clone the whole repository or download the source-code ZIP from the [Releases page](https://github.com/ReinhardJesolowitz24/Turbine/releases/tag/v6.0.0) — the binary is also included under `Turbine_Release/binary/`.*
 
 ---
 

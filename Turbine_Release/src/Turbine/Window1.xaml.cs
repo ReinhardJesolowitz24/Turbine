@@ -4698,15 +4698,20 @@ namespace Turbine
 
         private void button4_Click(object sender, RoutedEventArgs e)
         {
-            ShowFg("Turbine V5.2 is a free encryption program.\n\n" +
-                "Cipher: 1280-bit internal state across 4 parallel gear groups, stop-go-clocked\n" +
+            ShowFg("Turbine V6.0 is a free encryption program.\n\n" +
+                "Cipher: 1280-bit internal state across 4 parallel gear groups,\n" +
                 "shift register design (related family: Trivium).\n\n" +
                 "Key derivation:\n" +
-                "  V2 - Password mode (PBKDF2-SHA512, 1,200,000 iterations) - format byte 0x01\n" +
-                "  V3 - Key-file mode with SHA-512 whitening - format byte 0x03\n" +
-                "  Legacy modes (0x00, 0x02) remain readable for backward compatibility.\n\n" +
+                "  Password mode: PBKDF2-SHA512, 1,200,000 iterations\n" +
+                "  Key-file mode: SHA-512 whitening\n\n" +
+                "Integrity (V6): HMAC-SHA-384, Encrypt-then-MAC - format bytes 0x08 / 0x09.\n" +
+                "The tag is checked before any output is written; a tampered file\n" +
+                "or a wrong key is rejected without output.\n" +
+                "Files from older versions (0x00 - 0x07) remain readable, but have\n" +
+                "no tamper detection.\n\n" +
                 "Password length: 6 to 1024 characters.\n" +
-                "Key-file: any file >= 7 KB (photos, archives, or previously encrypted .tur files).\n\n" +
+                "Key-file: a real photograph >= 7 KB (or a previously encrypted .tur file).\n" +
+                "Solid-colour or synthetic images are rejected on encryption.\n\n" +
                 "Open source, MIT licensed, no backdoor.\n" +
                 "Source code: https://github.com/ReinhardJesolowitz24/Turbine\n\n" +
                 "This program is NOT to be used for any illegal activities, particularly\n" +

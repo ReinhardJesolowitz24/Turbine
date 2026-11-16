@@ -1,14 +1,17 @@
-# Turbine V5.0
+# Turbine V6.0
 
 Ein kostenloses, quelloffenes Werkzeug zur Datei-Verschlüsselung für den
 persönlichen Gebrauch. Ursprünglich 2012 entwickelt von **Reinhard Jesolowitz**,
 um persönliche Daten — Passwörter, Login-Dateien, sensible Dokumente — vor
 zufälligem Zugriff zu schützen (z.B. bei einem verlorenen USB-Stick).
 
-**Aktuelle Version: V5.0** (2026-05-20) — mit PBKDF2-SHA512 Schlüssel-Ableitung,
-SHA-512 Schlüsseldatei-Whitening, Mighty Mouse-Tastatur mit allen 95 ASCII-Zeichen
-und vielen UI/UX-Verbesserungen. **Vollständig abwärtskompatibel** zu allen
-früheren Dateiformaten (V1, V2, V3 Marker).
+**Aktuelle Version: V6.0** (2026-11) — mit Integritätsschutz (HMAC-SHA-384,
+Encrypt-then-MAC, Dateiversionen `0x08`/`0x09`), einer zur AES-S-Box disjunkten
+S-Box, gehärtetem IV pro Datei und einem Schutz gegen entartete Schlüsseldateien.
+**Vollständig abwärtskompatibel:** V6.0 entschlüsselt jede ältere Turbine-Datei.
+**Nicht vorwärtskompatibel:** Mit V6.0 erzeugte Dateien lassen sich mit V5.x
+**nicht** öffnen — bitte alle genutzten Installationen aktualisieren, bevor
+Dateien ausgetauscht werden.
 
 > *English version: see [README.md](README.md).*
 
@@ -50,18 +53,21 @@ unverdächtig und unauffällig auf der Festplatte.
 
 ## Schnellstart (mit fertiger EXE)
 
-**Direkter Download:** [Turbine.exe (V5.0, ~292 KB)](https://github.com/ReinhardJesolowitz24/Turbine/releases/download/V5.0/Turbine.exe)
+**Direkter Download:** [Turbine.exe (V6.0, ~300 KB)](https://github.com/ReinhardJesolowitz24/Turbine/releases/download/v6.0.0/Turbine.exe) — bitte mit `SHA256SUMS.txt` auf der [Release-Seite](https://github.com/ReinhardJesolowitz24/Turbine/releases/tag/v6.0.0) abgleichen
 
 1. `Turbine.exe` in einen beliebigen Ordner speichern
 2. Per Doppelklick starten (keine Installation nötig — portabel)
 3. Quelldatei auswählen, Zieldatei (`.tur`-Endung) festlegen, Passwort 2× eingeben
-4. **Encrypt** klicken — fertig
+   (oder eine Schlüsseldatei laden)
+4. **START** klicken — fertig
 
-Zum Entschlüsseln: Gleicher Ablauf, mit **Decrypt** und demselben Passwort.
+Zum Entschlüsseln: die `.tur`-Datei als Quelle wählen — Turbine erkennt sie und
+schaltet in den *Decryption Mode* —, Zieldatei festlegen, dasselbe Passwort
+eingeben (oder dieselbe Schlüsseldatei laden) und **START** klicken.
 
 **Voraussetzung:** Windows + .NET Framework 4.8 (bei Windows 10/11 bereits installiert).
 
-> *Alternativ kannst du das gesamte Repository klonen oder den Quellcode-ZIP von der [Releases-Seite](https://github.com/ReinhardJesolowitz24/Turbine/releases/tag/V5.0) laden — die Binärdatei liegt zusätzlich unter `Turbine_Release/binary/`.*
+> *Alternativ kannst du das gesamte Repository klonen oder den Quellcode-ZIP von der [Releases-Seite](https://github.com/ReinhardJesolowitz24/Turbine/releases/tag/v6.0.0) laden — die Binärdatei liegt zusätzlich unter `Turbine_Release/binary/`.*
 
 ---
 

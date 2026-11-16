@@ -7,11 +7,11 @@ using System.Windows;
 // Allgemeine Informationen über eine Assembly werden über die folgenden 
 // Attribute gesteuert. Ändern Sie diese Attributwerte, um die Informationen zu ändern,
 // die mit einer Assembly verknüpft sind.
-[assembly: AssemblyTitle("Turbine V5.2")]
-[assembly: AssemblyDescription("Free file encryption tool. PBKDF2-SHA512 KDF + Key-File whitening. No backdoor.")]
+[assembly: AssemblyTitle("Turbine V6.0")]
+[assembly: AssemblyDescription("Free file encryption tool. PBKDF2-SHA512 KDF + Key-File whitening + HMAC-SHA-384 integrity. No backdoor.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Turbine V5.2")]
+[assembly: AssemblyProduct("Turbine V6.0")]
 [assembly: AssemblyCopyright("Copyright © 2012-2026")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -51,5 +51,5 @@ using System.Windows;
 // Sie können alle Werte angeben oder die standardmäßigen Build- und Revisionsnummern 
 // übernehmen, indem Sie "*" eingeben:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("5.2.0.0")]
-[assembly: AssemblyFileVersion("5.2.0.0")]
+[assembly: AssemblyVersion("6.0.0.0")]
+[assembly: AssemblyFileVersion("6.0.0.0")]
