@@ -208,6 +208,47 @@ provided from V6 on:
 Older files (0x00–0x07) remain unauthenticated; re-encrypt important files with
 V6 to gain integrity protection.
 
+### Key file + passphrase (format 0x0A, current source / upcoming V6.1)
+
+Possession **and** knowledge: the file can only be decrypted with the key file
+**and** the passphrase.
+
+```
+kf      = 3 × 1023 bytes of the key file from offset 2500, XOR-folded (as in 0x09)
+kf_tag  = SHA-512( "TURBINE-KFPW-v1" ‖ kf )
+pw_in   = kf_tag ‖ UTF-8(passphrase)
+master  = PBKDF2-HMAC-SHA512( pw_in, salt = IV, 1 200 000 iterations, 64 B )
+```
+
+Then exactly as 0x08/0x09: expansion to 1024 bytes, S-box `0x1F3`,
+HMAC-SHA-384 tag (MAC key derived after the slow KDF). The cipher core is
+unchanged.
+
+The key file goes **into** the slow KDF, not after it. Otherwise an attacker
+could run PBKDF2 once per passphrase guess and then test key-file candidates
+cheaply. As built, every (key file, passphrase) pair costs a full PBKDF2 run:
+
+| Attacker has … | Remaining work |
+|---|---|
+| stick + photo, no passphrase | guess the passphrase, one PBKDF2 run per guess |
+| stick + passphrase, no photo | guess the photo — hopeless (≫ 256 bit) |
+| only the stick | product of both |
+| a weak photo (e.g. 2⁴⁰ candidates) + a medium passphrase | 2⁴⁰ × 2^P pairs, each a full PBKDF2 run |
+
+*Verified (2026-11, test copy driving the real `DoWork`):* round trips
+byte-exact (text, binary, 0 bytes, passphrase with umlauts/symbols, 6 and 1024
+characters); wrong passphrase or wrong key file → integrity message, no output;
+key file without passphrase (or passphrase without key file) → clear message
+before the KDF; master key and MAC tag recomputed independently in Python from
+the specification above — identical; the counter-check (passphrase only,
+without the key file in the KDF) does **not** match. The production build's
+KDF input was compared byte for byte with the Python specification.
+
+**Forward compatibility:** V6.0 and older do not know 0x0A and would decrypt
+such a file into garbage **without warning** (verified: 0.5 % matching bytes).
+From V6.1 on, any format byte above 0x0A is rejected with "file comes from a
+newer Turbine version", so this cannot repeat with future formats.
+
 ---
 
 ## Reporting new findings
@@ -257,6 +298,7 @@ The following improvements have been integrated:
    - `0x04` / `0x05` = V4 password / key-file (symmetric masks + AES-class S-box, poly 0x11D)
    - `0x06` / `0x07` = V5.2 password / key-file (improved password-info bytes)
    - `0x08` / `0x09` = **V6 password / key-file + HMAC-SHA-384 MAC + AES-disjoint S-box (poly 0x1F3)** — default for new files
+   - `0x0A` = **V6.1 key-file + passphrase** (both in PBKDF2) + MAC + S-box 0x1F3; higher values are rejected
 4. ✓ **SHA-512 whitening for key-file mode** (V3) added 2026-05-20.
    Empirically improves the Approximate Entropy NIST test when used with
    high-entropy key-file inputs (e.g., previously encrypted .tur files).

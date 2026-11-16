@@ -36,6 +36,14 @@ naive content filters and looks unremarkable on disk.
   mode (no compression) contains the original files unchanged — if those are
   text or other predictable data, the bytes Turbine reads may be plain text.
   The entropy guard only catches extreme cases, not every predictable file.
+- **Key file + passphrase** (current source, upcoming V6.1, format `0x0A`) —
+  load the key file, then type a passphrase. Both go **into** the slow
+  PBKDF2 key derivation, so every guess of a (key file, passphrase) pair costs
+  a full PBKDF2 run. A stolen stick together with the photo is not enough
+  without the passphrase, and a weak photo is still protected by a strong
+  passphrase. You need **both** to decrypt. Leave the passphrase empty for the
+  plain key-file mode. *Files in this format can only be opened with V6.1 or
+  newer* — older versions would turn them into garbage without warning.
 - **Cryptographically random IV** for every file (no two outputs are identical)
 - **Byte-oriented shift-register** design with a fixed clocking schedule
   (one gear group per output byte, round-robin) and state-dependent
@@ -108,7 +116,8 @@ For nation-state-level threats, use established standards (AES-GCM, age, etc.).
   key-file mode the photo *is* the key — there is no password and no slow key
   derivation in between. Anyone who has both the photo and the `.tur` file can
   decrypt it immediately. Keep the photo on a different medium than the data
-  and never send both through the same channel.
+  and never send both through the same channel. **Strongest option:** add a
+  passphrase (key file + passphrase, V6.1) — then the photo alone is useless.
 - **Re-encrypt old files with V6.** Files from earlier versions (format bytes
   `0x00`–`0x07`) have no integrity check. If a decryption ever produces
   garbage, keep the `.tur` file — see [SECURITY.md](SECURITY.md).

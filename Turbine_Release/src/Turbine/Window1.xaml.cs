@@ -903,6 +903,8 @@ namespace Turbine
             //   0x07 = V5.2 Schluesseldatei + verbesserte Passwort-Info-Bytes
             //   0x08 = V6 Passwort   + HMAC-SHA-384-MAC + S-Box 0x1F3 (AES-disjunkt)  [Default neu]
             //   0x09 = V6 Key-File   + HMAC-SHA-384-MAC + S-Box 0x1F3 (AES-disjunkt)  [Default neu]
+            //   0x0A = V6.1 Key-File + Passphrase (beide IN PBKDF2) + MAC + S-Box 0x1F3
+            //          (Window1.KeyFilePassphrase.cs). Groessere Werte werden abgelehnt.
             byte version_byte_to_write = 0x00;
             byte version_byte_of_file = 0x00;
 
@@ -910,8 +912,11 @@ namespace Turbine
             {
                 // Verschluesselung: V5.2 mit verbesserten Passwort-Info-Bytes (0x06 Passwort, 0x07 Key-File)
                 // MAC-Haertung: MacMode -> 0x08 (Passwort+MAC) / 0x09 (Key-File+MAC); Krypto identisch zu 0x06/0x07.
+                // Key-File + Passphrase -> 0x0A (nur mit MAC).
                 if (MacMode)
-                    version_byte_to_write = (schluesseldatei_geladen == 1) ? (byte)0x09 : (byte)0x08;
+                    version_byte_to_write = (schluesseldatei_geladen == 1)
+                        ? ((kf_passphrase.Length > 0) ? FORMAT_KFPW : (byte)0x09)
+                        : (byte)0x08;
                 else
                     version_byte_to_write = (schluesseldatei_geladen == 1) ? (byte)0x07 : (byte)0x06;
             }
@@ -929,7 +934,8 @@ namespace Turbine
                             if (version_byte_of_file == 0x01 || version_byte_of_file == 0x02 || version_byte_of_file == 0x03
                                 || version_byte_of_file == 0x04 || version_byte_of_file == 0x05
                                 || version_byte_of_file == 0x06 || version_byte_of_file == 0x07
-                                || version_byte_of_file == 0x08 || version_byte_of_file == 0x09)
+                                || version_byte_of_file == 0x08 || version_byte_of_file == 0x09
+                                || version_byte_of_file == FORMAT_KFPW)
                             {
                                 pre_fs.Seek(54, SeekOrigin.Begin);
                                 pre_fs.Read(zufall, 0, 16);
@@ -942,6 +948,15 @@ namespace Turbine
                     // bei Lese-Fehler: Legacy-Modus annehmen
                     version_byte_of_file = 0x00;
                 }
+            }
+
+            // Eingaben VOR der langsamen KDF pruefen (Passwortlaenge, Bestaetigung, Format/Modus passend).
+            // Abbruch ohne Ausgabe; Meldung in RunWorkerCompleted.
+            string input_reject = CheckInputsBeforeKdf(version_byte_of_file);
+            if (input_reject != null)
+            {
+                InputRejectMessage = input_reject;
+                return;
             }
 
             // C1-Schutz (nur Verschluesselung): entartetes Key-File ablehnen, BEVOR eine schwache Datei entsteht.
@@ -962,6 +977,16 @@ namespace Turbine
             {
                 use_pbkdf2 = true;   // 0x08 = Passwort+MAC: KDF wie 0x06
             }
+            // 0x0A = Key-File + Passphrase: PBKDF2 ueber (SHA-512-Tag des Key-Files || Passphrase).
+            // Das Key-File steckt IN der langsamen KDF -> jedes (Key-File, Passphrase)-Paar kostet einen PBKDF2-Lauf.
+            bool use_kfpw = (richtung_info == 0 && MacMode && schluesseldatei_geladen == 1 && kf_passphrase.Length > 0)
+                         || (richtung_info == 1 && version_byte_of_file == FORMAT_KFPW);
+            byte[] kdf_password_bytes = null;
+            if (use_kfpw)
+            {
+                use_pbkdf2 = true;
+                kdf_password_bytes = BuildKfPwInput(name_der_datei6X, kf_passphrase);
+            }
 
             if (use_pbkdf2)
             {
@@ -977,7 +1002,9 @@ namespace Turbine
                 byte[] master_key = null;
                 var kdf_task = System.Threading.Tasks.Task.Run(() =>
                 {
-                    using (var pbkdf2 = new Rfc2898DeriveBytes(passwort1, zufall, 1200000, HashAlgorithmName.SHA512))
+                    using (var pbkdf2 = (kdf_password_bytes != null)
+                        ? new Rfc2898DeriveBytes(kdf_password_bytes, zufall, 1200000, HashAlgorithmName.SHA512)
+                        : new Rfc2898DeriveBytes(passwort1, zufall, 1200000, HashAlgorithmName.SHA512))
                     {
                         master_key = pbkdf2.GetBytes(64);
                     }
@@ -1023,7 +1050,7 @@ namespace Turbine
             // aber Whitening absorbiert strukturelle Patterns aus JPG/ZIP/etc.
             // Damit verschwinden Approximate-Entropy-FAILs aus V2 Key-File-Modus (0x02).
             bool use_keyfile_whitening = false;
-            if (richtung_info == 0 && schluesseldatei_geladen == 1)
+            if (richtung_info == 0 && schluesseldatei_geladen == 1 && !use_kfpw)   // 0x0A nutzt PBKDF2 statt Whitening
             {
                 use_keyfile_whitening = true;
             }
@@ -1074,9 +1101,9 @@ namespace Turbine
             }
             // ===== Ende KDF V2/V3/V4 =====
 
-            // ===== MAC (0x08/0x09): Integritaet ZUERST pruefen, VOR jeder Ausgabe =====
+            // ===== MAC (0x08/0x09/0x0A): Integritaet ZUERST pruefen, VOR jeder Ausgabe =====
             // K_mac liegt hinter der langsamen KDF (name_der_datei6). Bei Mismatch: kein Klartext.
-            if (richtung_info == 1 && (version_byte_of_file == 0x08 || version_byte_of_file == 0x09))
+            if (richtung_info == 1 && IsMacFormat(version_byte_of_file))
             {
                 if (!VerifyMac(dateigroesse1))
                 {
@@ -1105,7 +1132,7 @@ namespace Turbine
                 // Entschluesselung: nur bei V4/V5.2-Dateien
                 use_fixed_masks = (version_byte_of_file == 0x04 || version_byte_of_file == 0x05
                                 || version_byte_of_file == 0x06 || version_byte_of_file == 0x07
-                                || version_byte_of_file == 0x08 || version_byte_of_file == 0x09);
+                                || IsMacFormat(version_byte_of_file));
             }
             byte mask_a3_16 = use_fixed_masks ? (byte)0xFF : (byte)0x55;
             byte mask_a4_16 = use_fixed_masks ? (byte)0xFF : (byte)0xAA;
@@ -1113,9 +1140,9 @@ namespace Turbine
             byte mask_b3_1  = use_fixed_masks ? (byte)0xFF : (byte)0xAA;
             // ===== Ende V4 =====
 
-            // S-Box-Auswahl: MAC-Versionen 0x08/0x09 nutzen die AES-disjunkte 0x1F3-S-Box; 0x04-0x07 die 0x11D.
+            // S-Box-Auswahl: MAC-Versionen 0x08/0x09/0x0A nutzen die AES-disjunkte 0x1F3-S-Box; 0x04-0x07 die 0x11D.
             bool use_sbox_1f3 = (richtung_info == 0 && MacMode)
-                                || (richtung_info == 1 && (version_byte_of_file == 0x08 || version_byte_of_file == 0x09));
+                                || (richtung_info == 1 && IsMacFormat(version_byte_of_file));
             byte[] active_sbox = use_sbox_1f3 ? TURBINE_SBOX_1F3 : TURBINE_SBOX;
 
             // ===== V5.2: Verbesserte Passwort-Info-Bytes =====
@@ -1129,7 +1156,7 @@ namespace Turbine
             else
             {
                 use_improved_pw_info = (version_byte_of_file == 0x06 || version_byte_of_file == 0x07
-                                || version_byte_of_file == 0x08 || version_byte_of_file == 0x09);
+                                || IsMacFormat(version_byte_of_file));
             }
             // ===== Ende V5.2 =====
 
@@ -2089,8 +2116,8 @@ namespace Turbine
                             if (fi.Length > 70)
                             {
                                 dateiLaenge = fi.Length - 70; //nur verschl. Code
-                                // MAC (0x08/0x09): die letzten 48 Byte sind der HMAC-Tag, kein Chiffretext.
-                                if (version_byte_of_file == 0x08 || version_byte_of_file == 0x09)
+                                // MAC (0x08/0x09/0x0A): die letzten 48 Byte sind der HMAC-Tag, kein Chiffretext.
+                                if (IsMacFormat(version_byte_of_file))
                                     dateiLaenge -= 48;
                             }
                             else
@@ -2201,6 +2228,7 @@ namespace Turbine
                             //   0x00 = Legacy V1, 0x01 = V2 PBKDF2, 0x02 = V2 Key-File
                             //   0x03 = V3 Key-File+Whitening, 0x04 = V4 PBKDF2+Fix, 0x05 = V4 Key-File+Fix
                             //   0x06 = V5.2 PBKDF2+Fix+ImprovedPwInfo, 0x07 = V5.2 Key-File+Fix+ImprovedPwInfo
+                            //   0x08/0x09 = V6 + MAC, 0x0A = Key-File + Passphrase + MAC
                             binWriter2.Write(version_byte_to_write);
                             binWriter2.Write((byte)(0x0));
                             binWriter2.Write((byte)(0x0));
@@ -4148,7 +4176,16 @@ namespace Turbine
             {
                 MacFailed = false;
                 ResetAfterAbort();
-                ShowFg("Integritaetspruefung fehlgeschlagen - Datei wurde manipuliert oder der Schluessel ist falsch. Es wurde keine Ausgabe erzeugt.");
+                ShowFg("Integrity check failed - the file was modified or the key is wrong. No output was written.");
+                return;
+            }
+            // Eingaben vor der KDF abgelehnt (Laenge, Bestaetigung, Format/Modus) -> keine Ausgabe.
+            if (InputRejectMessage != null)
+            {
+                string msg = InputRejectMessage;
+                InputRejectMessage = null;
+                ResetAfterAbort();
+                ShowFg(msg);
                 return;
             }
             // C1: entartetes Key-File beim Verschluesseln abgelehnt.
@@ -4156,7 +4193,7 @@ namespace Turbine
             {
                 LowEntropyKeyReject = false;
                 ResetAfterAbort();
-                ShowFg("Dieses Key-File hat zu wenig Zufall - bitte eine echte Fotografie verwenden (kein einfarbiges/synthetisches Bild). Es wurde nichts verschluesselt.");
+                ShowFg("This key file has too little randomness - please use a real photograph (no single-colored or synthetic image). Nothing was encrypted.");
                 return;
             }
             // First, handle the case where an exception was thrown.
@@ -4360,21 +4397,11 @@ namespace Turbine
                 prozess_laueft = true;
                 passwortgroesse = 0;
 
-                if (passwort_anzeige == 1)
-                {
-
-                    passwort1 = textBox5.Text;
-                }
-                else
-                {
-
-                    passwort1 = textBox3.Password;
-                }
-
-
-                //passwort1 = textBox3.Password;
-
-                passwort2 = textBox4.Password;
+                // Passwort bzw. (im Key-File-Modus) optionale Passphrase aus der GUI.
+                // Die Zuordnung zu passwort1/2, name_der_datei6 usw. macht ApplyKeyInputs
+                // (Window1.KeyFilePassphrase.cs) - derselbe Weg fuer alle Modi.
+                string pw_ui = (passwort_anzeige == 1) ? textBox5.Text : textBox3.Password;
+                string pw2_ui = textBox4.Password;
 
                 dateigroesse1 = textBox1.Text;
                 dateigroesse2 = textBox2.Text;
@@ -4382,37 +4409,7 @@ namespace Turbine
                 dateil1 = dateigroesse1.Length;
                 dateil2 = dateigroesse2.Length;
 
-
-
-
-                if (schluesseldatei_geladen == 0)
-                {
-                    if (passwort_anzeige == 1)
-                    {
-
-                        name_der_datei6 = StringToByteArray(textBox5.Text);
-                    }
-                    else
-                    {
-
-                        name_der_datei6 = StringToByteArray(textBox3.Password);
-                    }
-
-
-
-                    passwortgroesse = passwort1.Length;
-                    gen_passwort = passwort1.Length;
-                }
-
-                else
-                {
-                    name_der_datei6 = name_der_datei6X;
-                    passwort1 = "xxxyyy";
-                    passwort2 = "xxxyyy";
-                    passwortgroesse = 1023;
-                    gen_passwort = 1023;
-
-                }
+                ApplyKeyInputs(pw_ui, pw2_ui);
 
                 radioButton1_global = ((bool)radioButton1.IsChecked);
                 algo = true;
@@ -4707,8 +4704,10 @@ namespace Turbine
                 "shift register design (related family: Trivium).\n\n" +
                 "Key derivation:\n" +
                 "  Password mode: PBKDF2-SHA512, 1,200,000 iterations\n" +
-                "  Key-file mode: SHA-512 whitening\n\n" +
-                "Integrity (V6): HMAC-SHA-384, Encrypt-then-MAC - format bytes 0x08 / 0x09.\n" +
+                "  Key-file mode: SHA-512 whitening\n" +
+                "  Key-file + passphrase: both go into PBKDF2-SHA512 (format 0x0A) -\n" +
+                "    load the key file, then type a passphrase. You need BOTH to decrypt.\n\n" +
+                "Integrity (V6): HMAC-SHA-384, Encrypt-then-MAC - format bytes 0x08 / 0x09 / 0x0A.\n" +
                 "The tag is checked before any output is written; a tampered file\n" +
                 "or a wrong key is rejected without output.\n" +
                 "Files from older versions (0x00 - 0x07) remain readable, but have\n" +
@@ -4718,9 +4717,12 @@ namespace Turbine
                 "Solid-colour or synthetic images are rejected on encryption.\n\n" +
                 "Open source, MIT licensed, no backdoor.\n" +
                 "Source code: https://github.com/ReinhardJesolowitz24/Turbine\n\n" +
-                "This program is NOT to be used for any illegal activities, particularly\n" +
-                "pornographic, violent or discriminatory purposes.\n\n" +
-                "Use at your own risk! No liability for consequential damage or data loss.");
+                "Turbine is free software under the MIT License. It is provided \"as is\",\n" +
+                "without warranty of any kind. Use it at your own risk.\n\n" +
+                "Keep backups of important files, and keep your key file and passphrase\n" +
+                "safe: without them, encrypted data cannot be recovered.\n\n" +
+                "You are responsible for using Turbine in accordance with the laws\n" +
+                "that apply to you.");
             //MessageBox.Show(datei_endung1);
             //MessageBox.Show(datei_endung2);
             //String[] substrings = value.Split(delimiter)
@@ -4756,6 +4758,14 @@ namespace Turbine
             int passwortgroesse_lokal = 0;
 
             string passwort_lokal;
+
+            // Key-File geladen: Eingabe ist die optionale Passphrase (Format 0x0A) - Key-File bleibt geladen.
+            // Entladen weiterhin ueber den Key-File-Knopf ("Nein").
+            if (schluesseldatei_geladen == 1)
+            {
+                UpdateKeyFileModeLabel();
+                return;
+            }
 
             schluesseldatei_geladen = 0;
             button6.Background = Brushes.White;
@@ -4939,6 +4949,15 @@ namespace Turbine
             int passwortgroesse_lokal = 0;
 
             string passwort_lokal;
+
+            // Key-File geladen: Eingabe ist die optionale Passphrase (Format 0x0A) - Key-File bleibt geladen.
+            // Entladen weiterhin ueber den Key-File-Knopf ("Nein").
+            if (schluesseldatei_geladen == 1)
+            {
+                if ((bool)radioButton1.IsChecked) textBox5.Text = textBox3.Password;
+                UpdateKeyFileModeLabel();
+                return;
+            }
 
             schluesseldatei_geladen = 0;
             button6.Background = Brushes.White;
@@ -5144,6 +5163,7 @@ namespace Turbine
         private void button6_Click(object sender, RoutedEventArgs e)
         {
             schluesseldatei_geladen = 0;
+            keyFileNameText.Visibility = Visibility.Hidden;   // Key-File entladen -> Name ausblenden
             button6.Background = Brushes.White;
             progressBar2.Visibility = Visibility.Visible;
             label2.Visibility = Visibility.Hidden;
@@ -5248,11 +5268,16 @@ namespace Turbine
 
                         textBox3.Password = "";
                         textBox4.Password = "";
+                        textBox5.Text = "";      // sichtbare Eingabe ebenfalls leeren, sonst wuerde ein altes Passwort zur Passphrase
 
                         // Laden immer erlauben (auch schwache Key-Files) -> Altdateien bleiben oeffenbar.
                         // Die Entropie-Pruefung (C1) erfolgt erst beim VERSCHLUESSELN in DoWork.
                         schluesseldatei_geladen = 1;
                         button6.Background = Brushes.Green;
+                        // Dateiname anzeigen, damit man ein falsch gewaehltes Key-File sofort bemerkt
+                        keyFileNameText.Text = "key file:  " + System.IO.Path.GetFileName(schluesseldatei);
+                        keyFileNameText.ToolTip = schluesseldatei;
+                        keyFileNameText.Visibility = Visibility.Visible;
 
                         progressBar2.Visibility = Visibility.Hidden;
                         label2.Visibility = Visibility.Visible;
@@ -5262,6 +5287,7 @@ namespace Turbine
 
 
                         label4.Visibility = Visibility.Hidden;
+                        UpdateKeyFileModeLabel();   // "key file is loaded" (Passphrase optional danach eingeben)
                         //radioButton1.Visibility = Visibility.Hidden;
                         //radioButton2.Visibility = Visibility.Hidden;
                         image5.Visibility = Visibility.Visible;

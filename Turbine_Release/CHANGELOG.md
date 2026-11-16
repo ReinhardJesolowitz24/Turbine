@@ -6,9 +6,49 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ---
 
-## [Unreleased]
+## [Unreleased] — planned V6.1
 
-### Code (no format change, no binary rebuilt yet)
+### New: key file + passphrase (format `0x0A`)
+- Load a key file, then type a passphrase → the file is written as `0x0A` and
+  needs **both** to decrypt. Empty passphrase → plain key-file mode `0x09` as
+  before. The green label shows "key file + passphrase" when active.
+- Construction: `PBKDF2-HMAC-SHA512( SHA-512("TURBINE-KFPW-v1" ‖ key-file bytes)
+  ‖ UTF-8(passphrase), salt = IV, 1 200 000 )`, then as 0x08/0x09 (expansion,
+  S-box 0x1F3, HMAC-SHA-384). The key file is inside the slow KDF, so every
+  (key file, passphrase) guess costs a full PBKDF2 run. Cipher core unchanged.
+- GUI: typing in the password field no longer unloads a loaded key file (it is
+  now the optional passphrase); unload the key file via the key-file button
+  ("No"). Loading a key file also clears the visible password field.
+- GUI: the name of the loaded key file is shown below the keypad area (full
+  path as tooltip), so a wrongly chosen file is noticed before START.
+- GUI: all messages are in English now. The integrity-check and key-file
+  entropy messages from V6.0 were German.
+- "Terms of use" text rewritten: refers to the MIT License ("as is", no
+  warranty), adds a backup / key-loss reminder, and replaces the old use
+  restriction (which conflicted with the MIT License) with a note that users
+  are responsible for complying with applicable law.
+- Decrypting `0x0A` without key file or without passphrase → clear message
+  before the KDF, no output. Wrong passphrase or wrong key file → integrity
+  message, no output.
+- **Compatibility:** V6.1 reads every older file. **V6.0 and older cannot read
+  `0x0A` and would produce garbage without warning.**
+- New: any format byte above `0x0A` is rejected ("file comes from a newer
+  Turbine version"), so future formats cannot silently fail in V6.1+.
+- Verified in a test copy driving the real `DoWork`: round trips byte-exact
+  (text, binary, 0 bytes, umlauts, 6/1024 characters), all rejections without
+  output, KDF time equal to password mode (≈ 5 s), key and MAC tag recomputed
+  independently in Python (counter-check without key file does not match),
+  regression 0x07/0x08/0x09 (incl. files from the V6.0 build) byte-exact.
+
+### Fix: minimum password length was not enforced
+- In password mode the key derivation overwrote the length variable **before**
+  the 6-character check, so V2–V6.0 accepted any password on encryption —
+  **even an empty one** (verified on the V6.0 code). The length (6–1024) and
+  the confirmation field are now checked **before** the KDF, only when
+  encrypting; files already written with a short password remain decryptable
+  (verified).
+
+### Code (no format change)
 - `GatherJitterEntropy` now disposes the `Process` object it creates for the
   process id (it held an OS handle until garbage collection). IV output is
   unchanged in kind; verified with the IV self-test (20 000 IVs, χ² 256.3,

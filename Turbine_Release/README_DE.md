@@ -40,6 +40,15 @@ unverdächtig und unauffällig auf der Festplatte.
   unverändert — sind das Texte oder andere vorhersagbare Daten, liest Turbine
   womöglich Klartext. Der Entropie-Wächter fängt nur extreme Fälle ab, nicht
   jede vorhersagbare Datei.
+- **Schlüsseldatei + Passphrase** (aktueller Quellstand, kommende V6.1,
+  Format `0x0A`) — zuerst die Schlüsseldatei laden, dann eine Passphrase
+  eingeben. Beides geht **in** die langsame PBKDF2-Schlüsselableitung ein:
+  Jeder Rateversuch eines Paares (Schlüsseldatei, Passphrase) kostet einen
+  vollen PBKDF2-Lauf. Ein gestohlener Stick samt Foto reicht ohne Passphrase
+  nicht, und ein schwaches Foto bleibt durch eine starke Passphrase geschützt.
+  Zum Entschlüsseln braucht man **beides**. Für den reinen Schlüsseldatei-Modus
+  die Passphrase leer lassen. *Dateien in diesem Format lassen sich erst ab
+  V6.1 öffnen* — ältere Versionen würden sie ohne Warnung zu Datenmüll machen.
 - **Kryptografisch zufälliger IV** für jede Datei (keine zwei Outputs identisch)
 - **Byteorientierter Schieberegister-Cipher** mit festem Taktschema (pro
   Ausgabebyte wird reihum genau eine Zahnradgruppe getaktet) und
@@ -115,6 +124,8 @@ Für staatliche Bedrohungen sind etablierte Standards (AES-GCM, age) zu wählen.
   Passwort und keine langsame Schlüsselableitung dazwischen. Wer Foto und
   `.tur`-Datei hat, kann sofort entschlüsseln. Das Foto auf einem anderen
   Datenträger als die Daten lagern und nie beides über denselben Weg verschicken.
+  **Stärkste Variante:** zusätzlich eine Passphrase verwenden (Schlüsseldatei +
+  Passphrase, V6.1) — dann ist das Foto allein wertlos.
 - **Alte Dateien mit V6 neu verschlüsseln.** Dateien früherer Versionen
   (Formatbytes `0x00`–`0x07`) haben keine Integritätsprüfung. Kommt beim
   Entschlüsseln einmal nur Datenmüll heraus, die `.tur`-Datei behalten — siehe

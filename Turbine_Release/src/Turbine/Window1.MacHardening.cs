@@ -2,6 +2,7 @@
 //  MAC-Haertung (2026-09) -- Encrypt-then-MAC mit HMAC-SHA-384
 //  --------------------------------------------------------------------
 //  Neue Versionsbytes: 0x08 = Passwort + MAC, 0x09 = Key-File + MAC.
+//  Seit V6.1 zusaetzlich 0x0A = Key-File + Passphrase + MAC (Window1.KeyFilePassphrase.cs).
 //  Die Chiffrierung ist identisch zu 0x06/0x07 (nur die Versions-Conditionals
 //  in DoWork erkennen 0x08/0x09 zusaetzlich). Zusaetzlich wird ein 48-Byte-Tag
 //  angehaengt.
@@ -18,8 +19,8 @@
 //  -> der MAC ist KEIN schnelles Passwort-Orakel.
 //
 //  Deckt ab: Versionsbyte + IV + Chiffretext (alles ausser dem Tag selbst).
-//  Rest-Punkt: Downgrade 0x08->0x06 entfernt (kann nicht faelschen) die Pruefung;
-//  ein optionaler Strict-Mode (nur 0x08/0x09 akzeptieren) wuerde auch das schliessen.
+//  Rest-Punkt: Downgrade 0x08->0x06 entfernt (kann nicht faelschen) die Pruefung,
+//  ergibt aber nur Muell (andere S-Box); Strict-Mode bewusst nicht gebaut (SECURITY.md).
 // =====================================================================
 using System;
 using System.IO;
