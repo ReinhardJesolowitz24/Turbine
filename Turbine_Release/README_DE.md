@@ -130,6 +130,31 @@ Für staatliche Bedrohungen sind etablierte Standards (AES-GCM, age) zu wählen.
   Datenträger als die Daten lagern und nie beides über denselben Weg verschicken.
   **Stärkste Variante:** zusätzlich eine Passphrase verwenden (Schlüsseldatei +
   Passphrase, V6.1) — dann ist das Foto allein wertlos.
+- **Zwei schwache Geheimnisse addieren sich.** Im Modus Schlüsseldatei +
+  Passphrase gehen beide in *einen* PBKDF2-Lauf, und ein Angreifer erfährt
+  nicht, ob eine Hälfte schon stimmt — jede Kombination muss vollständig
+  durchgerechnet werden. Die Suchräume multiplizieren sich (in Bit: sie
+  addieren sich). Ein grobes Beispiel:
+
+  | Quelle | Annahme | Stärke |
+  |---|---|---|
+  | schwache Schlüsseldatei | eines von ~1 Million möglichen Fotos (z.B. aus dem eigenen Social-Media-Profil) | ~20 bit |
+  | schwache Passphrase | 3 Wörter aus einer Liste von 1 000 | ~30 bit |
+  | **zusammen** | | **~50 bit** |
+
+  Jeder Versuch kostet 1 200 000 PBKDF2-Iterationen — grob geschätzt einige
+  tausend Versuche pro Sekunde auf einer starken Grafikkarte. Allein wäre das
+  Foto in Minuten gefunden und die Passphrase in Tagen; zusammen brauchen
+  2⁵⁰ Versuche größenordnungsmäßig 10 000 Jahre auf einer Karte und immer
+  noch rund ein Jahrzehnt auf tausend Karten. Die beiden Hälften sind
+  außerdem *verschiedenartig* — etwas, das man **hat** (eine Datei), und
+  etwas, das man **weiß** (eine Phrase) —, ein Fehler bei der einen bricht
+  die andere nicht.
+  *Das gilt nur, solange beide getrennt bleiben:* Eine Passphrase als
+  Textdatei auf demselben Stick wie die Schlüsseldatei, oder beides im selben
+  Cloud-Ordner, lässt beide gemeinsam fallen. Und ist die Schlüsseldatei
+  bekannt, trägt die Passphrase den Schutz allein — sie sollte also so stark
+  wie möglich sein.
 - **Alte Dateien mit V6 neu verschlüsseln.** Dateien früherer Versionen
   (Formatbytes `0x00`–`0x07`) haben keine Integritätsprüfung. Kommt beim
   Entschlüsseln einmal nur Datenmüll heraus, die `.tur`-Datei behalten — siehe

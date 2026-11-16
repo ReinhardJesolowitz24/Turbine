@@ -6,6 +6,17 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ---
 
+## [Documentation] — 2026-11-17
+
+- **README / README_DE, recommendations:** worked example why key file +
+  passphrase adds up — a weak key file (~20 bit) and a weak passphrase
+  (~30 bit) give ~50 bit inside one PBKDF2 run (minutes / days alone, roughly
+  10 000 GPU-years together). Also: the two secrets are of different kinds
+  (have / know) and only help while stored apart; if the key file is known,
+  the passphrase alone carries the protection. No code change.
+
+---
+
 ## [V6.1 — Release] — 2026-11-16
 
 Binary release `v6.1.0` with the changes listed in this section.

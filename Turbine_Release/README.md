@@ -122,6 +122,28 @@ For nation-state-level threats, use established standards (AES-GCM, age, etc.).
   decrypt it immediately. Keep the photo on a different medium than the data
   and never send both through the same channel. **Strongest option:** add a
   passphrase (key file + passphrase, V6.1) — then the photo alone is useless.
+- **Two weak secrets add up.** In key file + passphrase mode both go into
+  *one* PBKDF2 run, and an attacker gets no hint that one half is already
+  right — every combination has to be computed in full. The search spaces
+  multiply (in bits: they add). A rough example:
+
+  | Source | Assumption | Strength |
+  |---|---|---|
+  | weak key file | one of ~1 million possible photos (e.g. from your own social-media profile) | ~20 bit |
+  | weak passphrase | 3 words from a list of 1 000 | ~30 bit |
+  | **together** | | **~50 bit** |
+
+  Each guess costs 1 200 000 PBKDF2 iterations — roughly a few thousand
+  guesses per second on a high-end graphics card (rough estimate). Alone, the
+  photo would fall in minutes and the passphrase in days; together, 2⁵⁰
+  guesses take on the order of 10 000 years on one card, and still about a
+  decade on a thousand cards. The two halves are also different *kinds* of
+  secret — something you **have** (a file) and something you **know** (a
+  phrase) — so one failing does not break the other.
+  *This only works while they stay apart:* a passphrase stored as a text file
+  on the same stick as the key file, or both in the same cloud folder, lets
+  both fall together. And if the key file is known, the passphrase alone has
+  to carry the protection — so make it as strong as you can.
 - **Re-encrypt old files with V6.** Files from earlier versions (format bytes
   `0x00`–`0x07`) have no integrity check. If a decryption ever produces
   garbage, keep the `.tur` file — see [SECURITY.md](SECURITY.md).
