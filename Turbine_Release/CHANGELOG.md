@@ -27,8 +27,15 @@ from V5.2.1.
   file → integrity dialog, no output, START usable afterwards; password mode
   `0x08` round trip byte-exact and wrong password → integrity dialog, no
   output; 0-byte file → 118-byte `.tur` → 0-byte plaintext.
-- Not yet verified on real data: files ≥ 2 GB with MAC (the streaming HMAC
-  was only exercised up to 1 MB).
+- **Large files (GUI, released V6.0 binary, 2026-11-16):** 3 GiB and 4.5 GiB
+  key-file round trips are byte-exact (SHA-256 identical), MAC verified over
+  the whole file. Throughput is linear in file size: encryption ≈ 2.4 MB/s,
+  decryption ≈ 1.4 MB/s (4.5 GiB: ~33 min / ~58 min); the MAC check before
+  decryption takes well under a minute.
+- **Known cosmetic limit:** the 32-bit size fields of the BMP container header
+  wrap above 4 GiB. Turbine itself takes the length from the file system, so
+  such files still decrypt correctly; only the BMP header is no longer a valid
+  image description (image viewers cannot open BMPs of this size anyway).
 
 ---
 
