@@ -31,8 +31,17 @@ naive content filters and looks unremarkable on disk.
 - **PBKDF2-SHA512 key derivation** (V2, 1,200,000 iterations) —
   makes brute-force attacks ~1.2 million times more expensive for weak
   passwords. Old V1 files remain readable without changes.
+- **Generate key file** (current source, planned V6.2) — the button creates a
+  new key file of 8 KB random data from two independent sources (Windows
+  random generator and CPU timing jitter, combined as for the IV). It never
+  overwrites an existing file. Such a file has full strength, unlike a photo
+  that may come from a guessable set. **Keep a copy on a separate medium:**
+  without the key file the data cannot be recovered. A random-looking `.bin`
+  file is recognisable as a key — so give it an inconspicuous name and
+  preferably add a passphrase. (This button replaces "wipe Source file":
+  overwriting does not reliably erase data on SSDs and USB sticks.)
 - **Key-file mode with SHA-512 whitening** (V3) — use a high-entropy file
-  (a real photograph, an archive) as a 1024-byte cryptographic key. For
+  (a generated key file, a real photograph, an archive) as a 1024-byte cryptographic key. For
   highest statistical quality, use a previously encrypted .tur file as the
   key. Degenerate key files (solid-colour or synthetic images, zero-padded
   files) are rejected on encryption.

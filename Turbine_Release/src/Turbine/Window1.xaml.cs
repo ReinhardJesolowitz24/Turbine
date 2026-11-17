@@ -170,7 +170,6 @@ namespace Turbine
 
 
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
-        private System.ComponentModel.BackgroundWorker backgroundWorker2;
         public Window1()
         {
             InitializeComponent();
@@ -181,10 +180,6 @@ namespace Turbine
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.backgroundWorker1.WorkerReportsProgress = true;
             this.backgroundWorker1.WorkerSupportsCancellation = true;
-            this.backgroundWorker2 = new System.ComponentModel.BackgroundWorker();
-            this.backgroundWorker2.WorkerReportsProgress = true;
-            this.backgroundWorker2.WorkerSupportsCancellation = true;
-            InitializeBackgoundWorker2();
 
 
             InitializeBackgoundWorker();
@@ -208,388 +203,6 @@ namespace Turbine
                 new ProgressChangedEventHandler(
             backgroundWorker1_ProgressChanged);
         }
-        private void InitializeBackgoundWorker2()
-        {
-            backgroundWorker2.DoWork +=
-                new DoWorkEventHandler(backgroundWorker2_DoWork);
-            backgroundWorker2.RunWorkerCompleted +=
-                new RunWorkerCompletedEventHandler(
-            backgroundWorker2_RunWorkerCompleted);
-            backgroundWorker2.ProgressChanged +=
-                new ProgressChangedEventHandler(
-            backgroundWorker2_ProgressChanged);
-        }
-
-        private void backgroundWorker2_DoWork(object sender2,
-        DoWorkEventArgs e)
-        {
-            // Get the BackgroundWorker that raised this event.
-            BackgroundWorker worker2 = sender2 as BackgroundWorker;
-            int fortschritt = 0;
-            int fortschritt_merker = 0;
-            long zeichen = 0;
-            long zeichen_alt = 0;
-            int bildwechsel = 0;
-            byte bildwechsel_merker = 0;
-            byte schreib = 0;
-
-
-            try
-            {
-                MessageBoxButton buttons = MessageBoxButton.YesNo;
-                string message = "Before deleting, the file will be overwritten ten times.\nBeware: A recovery is not possible anymore!";
-                string caption = "Warning";
-                string erg = "Yes";
-                string erg2;
-
-
-                //MessageBox.Show(message, caption, buttons);
-                // Show message box
-                MessageBoxResult result = MessageBox.Show(message, caption, buttons);
-                erg2 = result.ToString();
-                //MessageBox.Show(""+result);
-                if (erg.Equals(erg2))
-                {
-                    zeichen_alt = 0;
-                    zeichen = 0;
-                    for (int durchlauf = 0; durchlauf < 2; durchlauf++)
-                    {
-                        schreib = (byte)(0xFF);
-                        FileStream fileStr3 = new FileStream(@dateigroesse1, FileMode.Open, FileAccess.Write);
-                        BinaryWriter binWriter3 = new BinaryWriter(fileStr3);
-                        for (long i = 0; i < fileStr3.Length; i++)
-                        {
-                            //binWriter3.Write((schreib));
-                            fileStr3.WriteByte(schreib);
-
-
-
-
-                            zeichen++;
-
-                            if (worker2.CancellationPending)
-                            {
-                                e.Cancel = true;
-                                break;
-                            }
-
-                            if ((zeichen) > (zeichen_alt + 1000000))
-                            {
-                                zeichen_alt = zeichen;
-                                fortschritt = (int)(((zeichen * 10) / fileStr3.Length));
-
-                                if ((fortschritt_merker < fortschritt) && (fortschritt < 101))
-                                {
-                                    fortschritt_merker = fortschritt;
-                                    worker2.ReportProgress((int)fortschritt);
-                                }
-
-                            }
-
-                            bildwechsel++;
-
-                            if (bildwechsel > 10000)
-                            {
-                                if (bildwechsel_merker == 0)
-                                {
-                                    this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
-                                    {
-                                        flame_aus();
-                                    }));
-                                    bildwechsel_merker = 1;
-                                }
-                                else
-                                {
-                                    this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
-                                    {
-                                        flame_ein();
-                                    }));
-                                    bildwechsel_merker = 0;
-                                }
-                                bildwechsel = 0;
-                            }
-
-                        }
-
-                        binWriter3.Close();
-                        schreib = (byte)(0x00);
-                        FileStream fileStr4 = new FileStream(@dateigroesse1, FileMode.Open, FileAccess.Write);
-                        BinaryWriter binWriter4 = new BinaryWriter(fileStr4);
-                        for (long i2 = 0; i2 < fileStr4.Length; i2++)
-                        {
-                            //binWriter4.Write((schreib));
-                            fileStr4.WriteByte(schreib);
-                            zeichen++;
-                            if ((zeichen) > (zeichen_alt + 100000))
-                            {
-                                zeichen_alt = zeichen;
-                                fortschritt = (int)(((zeichen * 10) / fileStr4.Length));
-                                if ((fortschritt_merker < fortschritt) && (fortschritt < 101))
-                                {
-
-                                    fortschritt_merker = fortschritt;
-                                    worker2.ReportProgress((int)fortschritt);
-                                    // MessageBox.Show("Prozent = " + (warte*2));
-                                }
-
-
-
-                            }
-
-
-                            bildwechsel++;
-
-                            if (bildwechsel > 10000)
-                            {
-                                if (bildwechsel_merker == 0)
-                                {
-                                    this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
-                                    {
-                                        flame_aus();
-                                    }));
-                                    bildwechsel_merker = 1;
-                                }
-                                else
-                                {
-                                    this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
-                                    {
-                                        flame_ein();
-                                    }));
-                                    bildwechsel_merker = 0;
-                                }
-                                bildwechsel = 0;
-                            }
-
-                        }
-                        binWriter4.Close();
-                        schreib = (byte)(0xAA);
-                        FileStream fileStr5 = new FileStream(@dateigroesse1, FileMode.Open, FileAccess.Write);
-                        BinaryWriter binWriter5 = new BinaryWriter(fileStr5);
-                        for (long i3 = 0; i3 < fileStr5.Length; i3++)
-                        {
-                            //binWriter5.Write((schreib));
-                            fileStr5.WriteByte(schreib);
-
-                            zeichen++;
-                            if ((zeichen) > (zeichen_alt + 100000))
-                            {
-                                zeichen_alt = zeichen;
-                                fortschritt = (int)(((zeichen * 10) / fileStr5.Length));
-                                if ((fortschritt_merker < fortschritt) && (fortschritt < 101))
-                                {
-
-                                    fortschritt_merker = fortschritt;
-                                    worker2.ReportProgress((int)fortschritt);
-                                    // MessageBox.Show("Prozent = " + (warte*2));
-                                }
-
-
-                            }
-
-
-                            bildwechsel++;
-
-                            if (bildwechsel > 10000)
-                            {
-                                if (bildwechsel_merker == 0)
-                                {
-                                    this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
-                                    {
-                                        flame_aus();
-                                    }));
-                                    bildwechsel_merker = 1;
-                                }
-                                else
-                                {
-                                    this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
-                                    {
-                                        flame_ein();
-                                    }));
-                                    bildwechsel_merker = 0;
-                                }
-                                bildwechsel = 0;
-                            }
-
-                        }
-
-                        binWriter5.Close();
-
-                        schreib = (byte)(0x55);
-                        FileStream fileStr6 = new FileStream(@dateigroesse1, FileMode.Open, FileAccess.Write);
-                        BinaryWriter binWriter6 = new BinaryWriter(fileStr6);
-
-                        for (long i4 = 0; i4 < fileStr6.Length; i4++)
-                        {
-                            //binWriter6.Write((schreib));
-                            fileStr6.WriteByte(schreib);
-                            zeichen++;
-                            if ((zeichen) > (zeichen_alt + 100000))
-                            {
-                                zeichen_alt = zeichen;
-                                fortschritt = (int)(((zeichen * 10) / fileStr6.Length));
-
-                                if ((fortschritt_merker < fortschritt) && (fortschritt < 101))
-                                {
-
-                                    fortschritt_merker = fortschritt;
-                                    worker2.ReportProgress((int)fortschritt);
-                                    // MessageBox.Show("Prozent = " + (warte*2));
-                                }
-
-
-                            }
-
-
-                            bildwechsel++;
-
-                            if (bildwechsel > 10000)
-                            {
-                                if (bildwechsel_merker == 0)
-                                {
-                                    this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
-                                    {
-                                        flame_aus();
-                                    }));
-                                    bildwechsel_merker = 1;
-                                }
-                                else
-                                {
-                                    this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
-                                    {
-                                        flame_ein();
-                                    }));
-                                    bildwechsel_merker = 0;
-                                }
-                                bildwechsel = 0;
-                            }
-
-                        }
-
-                        binWriter6.Close();
-                        schreib = (byte)(0x00);
-                        FileStream fileStr7 = new FileStream(@dateigroesse1, FileMode.Open, FileAccess.Write);
-                        BinaryWriter binWriter7 = new BinaryWriter(fileStr7);
-
-
-                        for (long i5 = 0; i5 < fileStr7.Length; i5++)
-                        {
-
-
-                            //binWriter7.Write(schreib);
-                            fileStr7.WriteByte(schreib);
-
-                            zeichen++;
-                            if ((zeichen) > (zeichen_alt + 100000))
-                            {
-                                zeichen_alt = zeichen;
-                                fortschritt = (int)(((zeichen * 10) / fileStr7.Length));
-
-                                if ((fortschritt_merker < fortschritt) && (fortschritt < 101))
-                                {
-
-                                    fortschritt_merker = fortschritt;
-                                    worker2.ReportProgress((int)fortschritt);
-                                    // MessageBox.Show("Prozent = " + (warte*2));
-                                }
-
-
-                            }
-
-
-                            bildwechsel++;
-
-                            if (bildwechsel > 10000)
-                            {
-                                if (bildwechsel_merker == 0)
-                                {
-                                    this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
-                                    {
-                                        flame_aus();
-                                    }));
-                                    bildwechsel_merker = 1;
-                                }
-                                else
-                                {
-                                    this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
-                                    {
-                                        flame_ein();
-                                    }));
-                                    bildwechsel_merker = 0;
-                                }
-                                bildwechsel = 0;
-                            }
-
-                        }
-
-                        binWriter7.Close();
-
-                    }
-
-                    File.Delete(@dateigroesse1);
-                    worker2.ReportProgress((int)100);
-                    ShowFg("Secure deletion is completed successfully!");
-                    this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
-                    {
-                        flame_aus();
-                    }));
-
-                    this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
-                    {
-                        textBox1.Text = "";
-                        textBox2.Text = "";
-                    }));
-                    worker2.ReportProgress((int)0);
-                    this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
-                    {
-                        label5.Foreground = Brushes.Black;
-                        SetBurningLogo(false);
-                        // image4 entfernt 2026-05-20 (Tur_effekt2.bmp war V4.1-Overlay)
-                    }));
-                    fortschritt = 0;
-                    prozess_laueft = false;
-
-                }
-                else
-                {
-                    prozess_laueft = false;
-
-                    this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
-                    {
-                        flame_aus();
-                    }));
-                    this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
-                    {
-                        label5.Foreground = Brushes.Black;
-                        SetBurningLogo(false);
-                        // image4 entfernt 2026-05-20 (Tur_effekt2.bmp war V4.1-Overlay)
-                    }));
-                }
-
-            }
-
-            catch
-            {
-                ShowFg("Deleting not possible! Check file properties and permissions!");
-                prozess_laueft = false;
-                this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
-                {
-                    flame_aus();
-                }));
-                this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(delegate()
-                {
-                    label5.Foreground = Brushes.Black;
-                    SetBurningLogo(false);
-                    // image4 entfernt 2026-05-20 (Tur_effekt2.bmp war V4.1-Overlay)
-                }));
-            }
-
-
-
-        }
-
-
-
-
         private void backgroundWorker1_DoWork(object sender,
          DoWorkEventArgs e)
         {
@@ -4222,37 +3835,6 @@ namespace Turbine
         }
 
 
-        private void backgroundWorker2_RunWorkerCompleted(
-           object sender, RunWorkerCompletedEventArgs e)
-        {
-            // First, handle the case where an exception was thrown.
-            if (e.Error != null)
-            {
-                ShowFg(e.Error.Message);
-            }
-            else if (e.Cancelled)
-            {
-                // Next, handle the case where the user canceled 
-                // the operation.
-                // Note that due to a race condition in 
-                // the DoWork event handler, the Cancelled
-                // flag may not have been set, even though
-                // CancelAsync was called.
-                //resultLabel.Text = "Canceled";
-            }
-            else
-            {
-                // Finally, handle the case where the operation 
-                // succeeded.
-                //resultLabel.Text = e.Result.ToString();
-            }
-
-
-        }
-
-
-
-
         // This event handler updates the progress bar.
         private void backgroundWorker1_ProgressChanged(object sender,
             ProgressChangedEventArgs e)
@@ -4261,18 +3843,6 @@ namespace Turbine
 
             //this.progressBar1.Value = 50;
         }
-
-
-
-
-        private void backgroundWorker2_ProgressChanged(object sender,
-         ProgressChangedEventArgs e)
-        {
-            this.progressBar1.Value = e.ProgressPercentage;
-
-            //this.progressBar1.Value = 50;
-        }
-
 
 
 
@@ -4713,7 +4283,8 @@ namespace Turbine
                 "Files from older versions (0x00 - 0x07) remain readable, but have\n" +
                 "no tamper detection.\n\n" +
                 "Password length: 6 to 1024 characters.\n" +
-                "Key-file: a real photograph >= 7 KB (or a previously encrypted .tur file).\n" +
+                "Key-file: a real photograph >= 7 KB, a file made with \"generate key file\"\n" +
+                "(8 KB of random data), or a previously encrypted .tur file.\n" +
                 "Solid-colour or synthetic images are rejected on encryption.\n\n" +
                 "Open source, MIT licensed, no backdoor.\n" +
                 "Source code: https://github.com/ReinhardJesolowitz24/Turbine\n\n" +
@@ -5160,7 +4731,8 @@ namespace Turbine
 
 
 
-        private void button6_Click(object sender, RoutedEventArgs e)
+        /// <summary>Key-File-Bereich der GUI auf "nicht geladen" zuruecksetzen (vor jedem Laden).</summary>
+        private void ResetKeyFileUi()
         {
             schluesseldatei_geladen = 0;
             keyFileNameText.Visibility = Visibility.Hidden;   // Key-File entladen -> Name ausblenden
@@ -5179,16 +4751,149 @@ namespace Turbine
             label4.Visibility = Visibility.Visible;
             radioButton1.Visibility = Visibility.Visible;
             radioButton2.Visibility = Visibility.Visible;
+        }
 
-
+        /// <summary>Key-File laden (Faltung 2500 + 3 x 1023 Bytes) und GUI aktualisieren.
+        /// Genutzt vom Knopf "load key file" und vom Key-File-Generator.</summary>
+        private void LoadKeyFileFromPath(string schluesseldatei)
+        {
             byte x;
+            try
+            {
+
+                FileStream keyfile = new FileStream(@schluesseldatei, FileMode.Open, FileAccess.Read);
+                BinaryReader keyreader = new BinaryReader(keyfile);
+
+
+                if (keyfile.Length > 7000)
+                {
+
+
+                    for (long i = 0; i < 2500; i++)
+                    {
+                        //binWriter3.Write((schreib));
+                        x = (byte)(keyreader.ReadByte());
+
+
+
+                    }
+                    //MessageBox.Show("Bereich erreicht!"); 
+                    for (long i = 0; i < 1023; i++)
+                    {
+                        //binWriter3.Write((schreib));
+                        name_der_datei6X[i] = (byte)(keyreader.ReadByte());
+
+
+
+                    }
+
+                    for (long i = 0; i < 1023; i++)
+                    {
+                        //binWriter3.Write((schreib));
+                        name_der_datei6X[i] = (byte)(name_der_datei6X[i] ^ ((byte)(keyreader.ReadByte())));
+
+
+
+                    }
+
+                    for (long i = 0; i < 1023; i++)
+                    {
+                        //binWriter3.Write((schreib));
+                        name_der_datei6X[i] = (byte)(name_der_datei6X[i] ^ ((byte)(keyreader.ReadByte())));
+
+
+
+                    }
+
+                    //MessageBox.Show("Bereich2 erreicht!"); 
+                    keyfile.Close();
+                    keyreader.Close();
+
+                    textBox3.Password = "";
+                    textBox4.Password = "";
+                    textBox5.Text = "";      // sichtbare Eingabe ebenfalls leeren, sonst wuerde ein altes Passwort zur Passphrase
+
+                    // Laden immer erlauben (auch schwache Key-Files) -> Altdateien bleiben oeffenbar.
+                    // Die Entropie-Pruefung (C1) erfolgt erst beim VERSCHLUESSELN in DoWork.
+                    schluesseldatei_geladen = 1;
+                    button6.Background = Brushes.Green;
+                    // Dateiname anzeigen, damit man ein falsch gewaehltes Key-File sofort bemerkt
+                    keyFileNameText.Text = "key file:  " + System.IO.Path.GetFileName(schluesseldatei);
+                    keyFileNameText.ToolTip = schluesseldatei;
+                    keyFileNameText.Visibility = Visibility.Visible;
+
+                    progressBar2.Visibility = Visibility.Hidden;
+                    label2.Visibility = Visibility.Visible;
+                    label1.Visibility = Visibility.Hidden;
+
+
+
+
+                    label4.Visibility = Visibility.Hidden;
+                    UpdateKeyFileModeLabel();   // "key file is loaded" (Passphrase optional danach eingeben)
+                    //radioButton1.Visibility = Visibility.Hidden;
+                    //radioButton2.Visibility = Visibility.Hidden;
+                    image5.Visibility = Visibility.Visible;
+                    if ((bool)radioButton1.IsChecked)
+                    {
+
+                        textBox5.Background = Brushes.Transparent;
+
+                    }
+                    else
+                    {
+
+                        textBox3.Background = Brushes.Transparent;
+                        textBox4.Background = Brushes.Transparent;
+                    }
+
+
+
+                    /*
+                                                 textBox3.Password = "";
+                                                 textBox4.Password = "";
+                                                 textBox3.Password = ByteArrayToString(schluessel);
+                                                 textBox4.Password = ByteArrayToString(schluessel);
+                                                  */
+
+
+
+
+
+
+
+
+
+
+                }
+                else
+                {
+                    ShowFg("The file is too small (the file must be at least 7 kbyte).");
+
+                }
+
+            }
+
+
+
+            catch
+            {
+                ShowFg("Access not possible!");
+            }
+        }
+
+        private void button6_Click(object sender, RoutedEventArgs e)
+        {
+            ResetKeyFileUi();
+
+
             string schluesseldatei;
             byte[] schluessel = new byte[1024];
             byte[] y = new byte[2];
 
             string erg3;
             MessageBoxButton buttons = MessageBoxButton.YesNo;
-            string message = "As an alternative to a manual key you can choose a real photograph (a genuine photo, e.g. a JPEG) as a key file. The file must be at least 7 kbyte. Do NOT use a solid-color or synthetic image - it has too little randomness and will be rejected. A 1024 bytes big key will be generated. Would you like to use a key file?";
+            string message = "As an alternative to a manual key you can choose a real photograph (a genuine photo, e.g. a JPEG) or a file created with \"generate key file\" as a key file. The file must be at least 7 kbyte. Do NOT use a solid-color or synthetic image - it has too little randomness and will be rejected. A 1024 bytes big key will be generated. Would you like to use a key file?";
             string caption = "Load key file";
             string erg4 = "Yes";
 
@@ -5215,128 +4920,7 @@ namespace Turbine
 
 
 
-                try
-                {
-
-                    FileStream keyfile = new FileStream(@schluesseldatei, FileMode.Open, FileAccess.Read);
-                    BinaryReader keyreader = new BinaryReader(keyfile);
-
-
-                    if (keyfile.Length > 7000)
-                    {
-
-
-                        for (long i = 0; i < 2500; i++)
-                        {
-                            //binWriter3.Write((schreib));
-                            x = (byte)(keyreader.ReadByte());
-
-
-
-                        }
-                        //MessageBox.Show("Bereich erreicht!"); 
-                        for (long i = 0; i < 1023; i++)
-                        {
-                            //binWriter3.Write((schreib));
-                            name_der_datei6X[i] = (byte)(keyreader.ReadByte());
-
-
-
-                        }
-
-                        for (long i = 0; i < 1023; i++)
-                        {
-                            //binWriter3.Write((schreib));
-                            name_der_datei6X[i] = (byte)(name_der_datei6X[i] ^ ((byte)(keyreader.ReadByte())));
-
-
-
-                        }
-
-                        for (long i = 0; i < 1023; i++)
-                        {
-                            //binWriter3.Write((schreib));
-                            name_der_datei6X[i] = (byte)(name_der_datei6X[i] ^ ((byte)(keyreader.ReadByte())));
-
-
-
-                        }
-
-                        //MessageBox.Show("Bereich2 erreicht!"); 
-                        keyfile.Close();
-                        keyreader.Close();
-
-                        textBox3.Password = "";
-                        textBox4.Password = "";
-                        textBox5.Text = "";      // sichtbare Eingabe ebenfalls leeren, sonst wuerde ein altes Passwort zur Passphrase
-
-                        // Laden immer erlauben (auch schwache Key-Files) -> Altdateien bleiben oeffenbar.
-                        // Die Entropie-Pruefung (C1) erfolgt erst beim VERSCHLUESSELN in DoWork.
-                        schluesseldatei_geladen = 1;
-                        button6.Background = Brushes.Green;
-                        // Dateiname anzeigen, damit man ein falsch gewaehltes Key-File sofort bemerkt
-                        keyFileNameText.Text = "key file:  " + System.IO.Path.GetFileName(schluesseldatei);
-                        keyFileNameText.ToolTip = schluesseldatei;
-                        keyFileNameText.Visibility = Visibility.Visible;
-
-                        progressBar2.Visibility = Visibility.Hidden;
-                        label2.Visibility = Visibility.Visible;
-                        label1.Visibility = Visibility.Hidden;
-
-
-
-
-                        label4.Visibility = Visibility.Hidden;
-                        UpdateKeyFileModeLabel();   // "key file is loaded" (Passphrase optional danach eingeben)
-                        //radioButton1.Visibility = Visibility.Hidden;
-                        //radioButton2.Visibility = Visibility.Hidden;
-                        image5.Visibility = Visibility.Visible;
-                        if ((bool)radioButton1.IsChecked)
-                        {
-
-                            textBox5.Background = Brushes.Transparent;
-
-                        }
-                        else
-                        {
-
-                            textBox3.Background = Brushes.Transparent;
-                            textBox4.Background = Brushes.Transparent;
-                        }
-
-
-
-                        /*
-                                                     textBox3.Password = "";
-                                                     textBox4.Password = "";
-                                                     textBox3.Password = ByteArrayToString(schluessel);
-                                                     textBox4.Password = ByteArrayToString(schluessel);
-                                                      */
-
-
-
-
-
-
-
-
-
-
-                    }
-                    else
-                    {
-                        ShowFg("The file is too small (the file must be at least 7 kbyte).");
-
-                    }
-
-                }
-
-
-
-                catch
-                {
-                    ShowFg("Access not possible!");
-                }
+                LoadKeyFileFromPath(schluesseldatei);
             }
 
 
@@ -5348,28 +4932,6 @@ namespace Turbine
 
         private void textBox4_PasswordChanged(object sender, RoutedEventArgs e)
         {
-
-        }
-
-        private void button5_Click(object sender, RoutedEventArgs e)
-        {
-
-            if (prozess_laueft == false)
-            {
-                label5.Foreground = Brushes.Red;
-                SetBurningLogo(true);
-                // image4 entfernt 2026-05-20 (Tur_effekt2.bmp war V4.1-Overlay)
-                prozess_laueft = true;
-                dateigroesse1 = textBox1.Text;
-                dateigroesse2 = textBox2.Text;
-
-                dateil1 = dateigroesse1.Length;
-                dateil2 = dateigroesse2.Length;
-
-
-                backgroundWorker2.RunWorkerAsync();
-
-            }
 
         }
 

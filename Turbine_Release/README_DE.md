@@ -33,8 +33,19 @@ unverdächtig und unauffällig auf der Festplatte.
 - **PBKDF2-SHA512 Schlüssel-Ableitung** (V2, 1.200.000 Iterationen) —
   macht Brute-Force-Angriffe ~1,2 Millionen mal teurer bei schwachen
   Passwörtern. Alte V1-Dateien bleiben weiterhin lesbar.
+- **Schlüsseldatei erzeugen** (aktueller Quellstand, geplante V6.2) — der
+  Knopf „generate key file“ erzeugt eine neue Schlüsseldatei mit 8 KB Zufall
+  aus zwei unabhängigen Quellen (Zufallsgenerator von Windows und
+  Zeitschwankungen der CPU, gemischt wie beim IV). Eine vorhandene Datei wird
+  nie überschrieben. So eine Datei hat volle Stärke, anders als ein Foto, das
+  aus einer erratbaren Menge stammen kann. **Sofort eine Kopie auf einem
+  anderen Datenträger anlegen:** Ohne die Schlüsseldatei sind die Daten
+  verloren. Eine `.bin`-Datei mit Zufallsinhalt ist als Schlüssel erkennbar —
+  daher einen unauffälligen Namen wählen und möglichst eine Passphrase dazu
+  nehmen. (Der Knopf ersetzt „wipe Source file“: Überschreiben löscht auf
+  SSDs und USB-Sticks nicht zuverlässig.)
 - **Schlüsseldatei-Modus mit SHA-512-Whitening** (V3) — eine Datei mit
-  viel Zufall (echte Fotografie, Archiv) als 1024-Byte-Schlüssel verwendbar.
+  viel Zufall (erzeugte Schlüsseldatei, echte Fotografie, Archiv) als 1024-Byte-Schlüssel verwendbar.
   Für höchste statistische Qualität empfiehlt sich eine bereits verschlüsselte
   .tur-Datei als Schlüsseldatei. Entartete Schlüsseldateien (einfarbige oder
   synthetische Bilder, mit Nullen aufgefüllte Dateien) werden beim

@@ -75,7 +75,7 @@
         <Button Margin="7,241,0,0" Name="button6" Click="button6_Click" HorizontalAlignment="Left" Width="144.89" ToolTip="use any file as a key" FontSize="12" Height="28.945" VerticalAlignment="Top">load key file  (optional)</Button>
         <ProgressBar Height="14" HorizontalAlignment="Right" Margin="0,0,11.11,169" Name="progressBar2" VerticalAlignment="Bottom" Width="162.206" ValueChanged="progressBar2_ValueChanged" Background="Transparent" />
         <Label HorizontalAlignment="Right" Margin="0,0,18.156,175" Name="label1" Width="128" FontSize="13" Height="33.33" VerticalAlignment="Bottom">key evaluation</Label>
-        <Button Height="29" Margin="181.093,65,112.156,0" Name="button5" VerticalAlignment="Top" Click="button5_Click" Background="Yellow" ToolTip="delete Source files secure" FontSize="12">wipe Source file</Button>
+        <Button Height="29" Margin="181.093,67,112.156,0" Name="button5" VerticalAlignment="Top" Click="GenerateKeyFile_Click" Background="LightSkyBlue" ToolTip="create a new random key file (8 KB) - keep a copy on a separate medium" FontSize="12">generate key file</Button>
         <Image Height="34.632" Margin="146,12.003,0,0" Name="image2" Stretch="Fill" VerticalAlignment="Top" Source="/Turbine;component/turbine.ico" Visibility="Hidden" ImageFailed="image2_ImageFailed" HorizontalAlignment="Left" Width="47.507" />
         <Image Height="34.632" Margin="146,12.003,0,0" Name="image3" Source="/Turbine;component/turbine2.ico" Stretch="Fill" VerticalAlignment="Top" HorizontalAlignment="Left" Width="47.507" />
         <!-- 2026-05-20: image4 (Tur_effekt2.bmp brennende V4.1-Schrift) entfernt.

@@ -100,6 +100,18 @@ deniability), not cryptography.
   file from silently producing a weak, near-public key. Real photographs pass
   easily; use a genuine photo. The check runs only on encryption, so **existing
   files stay decryptable** even if they were made with a weak key file.
+- **Key-file generator** (current source, planned V6.2) — *generate key file*
+  writes 8 192 bytes = OS CSPRNG (`RNGCryptoServiceProvider`) XOR a SHA-512
+  counter stream over `"TURBINE-KEYGEN-v1" ‖ 2 × 32 B timing-jitter entropy`
+  (same independent second source as the IV). If either source is sound, the
+  output is unpredictable. No format change: the result is an ordinary key
+  file for `0x09` / `0x0A`. An existing file is never overwritten; the file is
+  read back and compared after writing. Tested 2026-11 (300 files from the test
+  build, 50 from the production build): all unique, all pass the entropy
+  guard, χ² ≈ 255 (255 d.f.); with the
+  CSPRNG forced to zeros (jitter only) 60 × 100 files give mean χ² 251 and no
+  repeated 64-byte block among 768 000. The former *wipe* function was removed:
+  multi-pass overwriting is not reliable on SSDs / flash (wear levelling).
 - **Large internal state** — 1280 bits across 4 parallel gear groups,
   larger than AES-256's 256-bit key.
 - **Wide password range** — 6 to 1024 bytes. With a 32-byte random password

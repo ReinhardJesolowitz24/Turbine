@@ -6,6 +6,34 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ---
 
+## [Unreleased] — planned V6.2
+
+### New: generate key file (replaces "wipe Source file")
+- The former yellow button **wipe Source file** is now **generate key file**.
+  It creates a new key file of 8 192 bytes: OS CSPRNG XOR a SHA-512 counter
+  stream over independent timing-jitter entropy (same two-source idea as the
+  IV hardening). Save dialog with `.bin` default; an **existing file is never
+  overwritten** (it could be a key file still in use); the written file is
+  read back and compared; a clear warning to keep a copy on a separate medium;
+  optional "load it as key file now".
+- No format change — the file is an ordinary key file (`0x09`, also readable
+  by V6.0, and `0x0A`).
+- **Removed: wipe Source file.** Overwriting a file ten times does not reliably
+  erase it on SSDs and USB sticks (the controller writes to new cells; old
+  ones stay readable to forensic tools). Full-disk encryption (e.g. BitLocker)
+  is the effective measure there.
+- Code: key-file loading moved from the button handler into
+  `LoadKeyFileFromPath` / `ResetKeyFileUi` (shared by "load key file" and the
+  generator, behaviour unchanged); the wipe worker (`backgroundWorker2`) was
+  removed. Load hint and About text mention generated key files.
+- Verified (test copy and production build): 300 generated files unique and
+  passing the entropy guard, χ² ≈ 255; jitter-only path (CSPRNG forced to
+  zeros) 60 × 100 files, mean χ² 251, no repeated 64-byte block; round trips
+  `0x0A` and `0x09` with a generated key file byte-exact, wrong key file →
+  integrity message, older `0x08`/`0x0A` files still decrypt.
+
+---
+
 ## [Documentation] — 2026-11-17
 
 - **README / README_DE, recommendations:** worked example why key file +

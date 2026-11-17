@@ -99,6 +99,7 @@
     <Compile Include="Window1.IvHardening.cs" />
     <Compile Include="Window1.MacHardening.cs" />
     <Compile Include="Window1.KeyFilePassphrase.cs" />
+    <Compile Include="Window1.KeyFileGenerator.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
