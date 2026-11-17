@@ -6,6 +6,23 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ---
 
+## [Documentation] — 2026-11-17 (after V6.2)
+
+- **README / README_DE, recommendations:** a holiday photo as key file gives
+  camouflage, not strength — the 3-block XOR fold evens out the statistics
+  but adds no secrecy; an attacker with the notebook folds every picture
+  (10 000 photos ≈ 13 bit, seconds in `0x09` mode), so use a photo together
+  with a passphrase (`0x0A`). New warning: never change a key photo (photo
+  managers rewrite metadata and shift the bytes, cloud sync / messengers
+  recompress) — keep an unchanged copy and test it from time to time.
+  New rule of thumb: generated key file when using encryption may be seen,
+  photo + passphrase when nothing should look like encryption (encrypted
+  files kept elsewhere, e.g. with a provider); note on traces Turbine leaves
+  on a computer (started programs, recently used files, download history)
+  and that key-disclosure rules differ by country. No code change.
+
+---
+
 ## [V6.2 — Release] — 2026-11-17
 
 Binary release `v6.2.0` with the changes listed in this section.

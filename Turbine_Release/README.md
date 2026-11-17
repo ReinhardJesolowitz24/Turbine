@@ -155,6 +155,41 @@ For nation-state-level threats, use established standards (AES-GCM, age, etc.).
   on the same stick as the key file, or both in the same cloud folder, lets
   both fall together. And if the key file is known, the passphrase alone has
   to carry the protection — so make it as strong as you can.
+- **A holiday photo as key file: camouflage, not strength.** A photo among
+  thousands of others on a notebook looks unremarkable, and that remains a
+  valid choice. Turbine skips the first 2 500 bytes (header, most metadata)
+  and XOR-folds three 1 023-byte blocks — this evens out the statistics of
+  the JPEG data. It cannot add secrecy that is not in the file: whoever has
+  the notebook can compute the same fold for every picture on it.
+  10 000 photos are only about 13 bit, and in plain key-file mode (`0x09`)
+  there is no slow key derivation, so trying them all takes seconds. **Use a
+  photo together with a passphrase** (`0x0A`): the photo provides the
+  camouflage, the passphrase and the 1.2 million iterations provide the
+  strength.
+- **Never change a key photo.** Turbine reads the bytes from offset 2 500
+  on; if the file changes even slightly, the key is gone. This happens
+  easily: rotating or rating a picture in a photo manager often rewrites the
+  metadata and shifts all following bytes; cloud sync and messengers often
+  recompress images; editing and saving again produces a different file.
+  Keep an **unchanged copy** on a separate medium (the same applies to a
+  generated key file), and from time to time check that a small test file
+  encrypted with it still opens.
+- **Generated key file or photo? A rule of thumb.**
+  - *If being seen to use encryption is no problem:* use **generate key
+    file** — it is strong and cannot be guessed; with a passphrase it is the
+    strongest option.
+  - *If nothing should look like encryption:* use a **photo plus a
+    passphrase**. The encrypted files can be kept elsewhere (e.g. with an
+    e-mail or cloud provider, who cannot read them either), the device you
+    carry holds only ordinary photos, and the passphrase is in your head. You
+    trade some key-file strength for inconspicuousness; the passphrase makes
+    up for it.
+  - *Traces:* a computer on which Turbine was used keeps traces of it —
+    Windows records started programs and recently used files (which can point
+    to the one photo Turbine read), and the browser history shows the
+    download. A device that should stay unremarkable is best one on which
+    Turbine was never run. Whether you may be required to hand over keys
+    differs from country to country — Turbine cannot change that.
 - **Re-encrypt old files with V6.** Files from earlier versions (format bytes
   `0x00`–`0x07`) have no integrity check. If a decryption ever produces
   garbage, keep the `.tur` file — see [SECURITY.md](SECURITY.md).

@@ -167,6 +167,43 @@ Für staatliche Bedrohungen sind etablierte Standards (AES-GCM, age) zu wählen.
   Cloud-Ordner, lässt beide gemeinsam fallen. Und ist die Schlüsseldatei
   bekannt, trägt die Passphrase den Schutz allein — sie sollte also so stark
   wie möglich sein.
+- **Ein Urlaubsfoto als Schlüsseldatei: Tarnung, nicht Stärke.** Ein Foto
+  unter Tausenden auf einem Notebook fällt nicht auf, und das bleibt eine
+  sinnvolle Wahl. Turbine überspringt die ersten 2 500 Byte (Dateikopf, die
+  meisten Metadaten) und verknüpft drei Blöcke zu je 1 023 Byte per XOR —
+  das glättet die Statistik der JPEG-Daten. Geheimnis, das nicht in der
+  Datei steckt, kann es aber nicht hinzufügen: Wer das Notebook hat, rechnet
+  dieselbe Faltung für jedes Bild darauf nach. 10 000 Fotos sind nur etwa
+  13 bit, und im reinen Schlüsseldatei-Modus (`0x09`) gibt es keine langsame
+  Schlüsselableitung — alle durchzuprobieren dauert Sekunden. **Ein Foto
+  daher zusammen mit einer Passphrase verwenden** (`0x0A`): Das Foto sorgt
+  für die Tarnung, Passphrase und 1,2 Millionen Iterationen für die Stärke.
+- **Ein Schlüsselfoto nie verändern.** Turbine liest die Bytes ab Position
+  2 500; ändert sich die Datei auch nur minimal, ist der Schlüssel weg. Das
+  passiert leicht: Drehen oder Bewerten in einer Fotoverwaltung schreibt oft
+  die Metadaten neu und verschiebt alle Bytes dahinter; Cloud-Synchronisation
+  und Messenger komprimieren Bilder häufig neu; Bearbeiten und erneutes
+  Speichern ergibt eine andere Datei. Eine **unveränderte Kopie** auf einem
+  anderen Datenträger aufbewahren (das gilt auch für eine erzeugte
+  Schlüsseldatei) und gelegentlich prüfen, ob sich eine damit verschlüsselte
+  kleine Testdatei noch öffnen lässt.
+- **Erzeugte Schlüsseldatei oder Foto? Eine Faustregel.**
+  - *Ist es kein Problem, dass man Verschlüsselung nutzt:* **generate key
+    file** verwenden — stark und nicht zu erraten; mit Passphrase die
+    stärkste Variante.
+  - *Soll nichts nach Verschlüsselung aussehen:* ein **Foto plus
+    Passphrase** verwenden. Die verschlüsselten Dateien können woanders
+    liegen (z.B. bei einem E-Mail- oder Cloud-Anbieter, der sie ebenfalls
+    nicht lesen kann), auf dem mitgeführten Gerät sind nur gewöhnliche Fotos,
+    und die Passphrase ist im Kopf. Man tauscht etwas Stärke der
+    Schlüsseldatei gegen Unauffälligkeit; die Passphrase gleicht das aus.
+  - *Spuren:* Ein Rechner, auf dem Turbine benutzt wurde, behält Spuren davon
+    — Windows merkt sich gestartete Programme und zuletzt verwendete Dateien
+    (die auf das eine Foto zeigen können, das Turbine gelesen hat), und der
+    Browserverlauf zeigt den Download. Ein Gerät, das unauffällig bleiben
+    soll, ist am besten eines, auf dem Turbine nie lief. Ob man Schlüssel
+    herausgeben muss, ist von Land zu Land verschieden — daran kann Turbine
+    nichts ändern.
 - **Alte Dateien mit V6 neu verschlüsseln.** Dateien früherer Versionen
   (Formatbytes `0x00`–`0x07`) haben keine Integritätsprüfung. Kommt beim
   Entschlüsseln einmal nur Datenmüll heraus, die `.tur`-Datei behalten — siehe
