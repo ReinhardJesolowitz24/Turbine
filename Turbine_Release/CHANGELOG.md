@@ -6,7 +6,20 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ---
 
-## [Unreleased] — planned V6.2
+## [V6.2 — Release] — 2026-11-17
+
+Binary release `v6.2.0` with the changes listed in this section.
+
+- **Compatibility:** no format change. V6.2 reads every older Turbine file
+  (`0x00`–`0x0A`) and writes the same formats as V6.1. A generated key file is
+  an ordinary key file: `0x09` files made with it also open in V6.0 and V6.1,
+  `0x0A` files in V6.1.
+- Version: window title, logo, About dialog and assembly version 6.1 → 6.2.
+  README / README_DE: version header, current-version paragraph and download
+  links (now `v6.2.0`).
+- Release binary: FileVersion 6.2.0.0; generator check (50 files unique, all
+  pass the entropy guard, χ² ≈ 255; jitter-only path 100 files unique) and a
+  `0x0A` round trip with a generated key file byte-exact.
 
 ### New: generate key file (replaces "wipe Source file")
 - The former yellow button **wipe Source file** is now **generate key file**.

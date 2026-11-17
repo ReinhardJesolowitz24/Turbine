@@ -1,17 +1,18 @@
-# Turbine V6.1
+# Turbine V6.2
 
 Ein kostenloses, quelloffenes Werkzeug zur Datei-Verschlüsselung für den
 persönlichen Gebrauch. Ursprünglich 2012 entwickelt von **Reinhard Jesolowitz**,
 um persönliche Daten — Passwörter, Login-Dateien, sensible Dokumente — vor
 zufälligem Zugriff zu schützen (z.B. bei einem verlorenen USB-Stick).
 
-**Aktuelle Version: V6.1** (2026-11) — neu ist der kombinierte Modus
-**Key-File + Passphrase** (Dateiversion `0x0A`): Beides geht in die langsame
-Schlüsselableitung, ein gestohlenes Key-File allein reicht also nicht. Seit
-V6.0: Integritätsschutz (HMAC-SHA-384, Encrypt-then-MAC, Dateiversionen
+**Aktuelle Version: V6.2** (2026-11) — neu ist **generate key file**: Turbine
+erzeugt selbst eine starke Schlüsseldatei aus Zufall (ersetzt „wipe Source
+file“). Seit V6.1 gibt es den kombinierten Modus **Key-File + Passphrase**
+(Dateiversion `0x0A`): Beides geht in die langsame Schlüsselableitung, ein
+gestohlenes Key-File allein reicht also nicht. Seit V6.0: Integritätsschutz (HMAC-SHA-384, Encrypt-then-MAC, Dateiversionen
 `0x08`/`0x09`), eine zur AES-S-Box disjunkte S-Box, gehärteter IV pro Datei
 und ein Schutz gegen entartete Schlüsseldateien.
-**Vollständig abwärtskompatibel:** V6.1 entschlüsselt jede ältere Turbine-Datei.
+**Vollständig abwärtskompatibel:** V6.2 entschlüsselt jede ältere Turbine-Datei.
 **Nicht vorwärtskompatibel:** Dateien im neuen Modus Key-File + Passphrase
 (`0x0A`) lassen sich mit V6.0 und älter **nicht** öffnen; Dateien in den
 anderen Modi öffnet V6.0 weiterhin. Bitte alle genutzten Installationen
@@ -33,7 +34,7 @@ unverdächtig und unauffällig auf der Festplatte.
 - **PBKDF2-SHA512 Schlüssel-Ableitung** (V2, 1.200.000 Iterationen) —
   macht Brute-Force-Angriffe ~1,2 Millionen mal teurer bei schwachen
   Passwörtern. Alte V1-Dateien bleiben weiterhin lesbar.
-- **Schlüsseldatei erzeugen** (aktueller Quellstand, geplante V6.2) — der
+- **Schlüsseldatei erzeugen** (V6.2) — der
   Knopf „generate key file“ erzeugt eine neue Schlüsseldatei mit 8 KB Zufall
   aus zwei unabhängigen Quellen (Zufallsgenerator von Windows und
   Zeitschwankungen der CPU, gemischt wie beim IV). Eine vorhandene Datei wird
@@ -84,7 +85,7 @@ unverdächtig und unauffällig auf der Festplatte.
 
 ## Schnellstart (mit fertiger EXE)
 
-**Direkter Download:** [Turbine.exe (V6.1, ~300 KB)](https://github.com/ReinhardJesolowitz24/Turbine/releases/download/v6.1.0/Turbine.exe) — bitte mit `SHA256SUMS.txt` auf der [Release-Seite](https://github.com/ReinhardJesolowitz24/Turbine/releases/tag/v6.1.0) abgleichen
+**Direkter Download:** [Turbine.exe (V6.2, ~300 KB)](https://github.com/ReinhardJesolowitz24/Turbine/releases/download/v6.2.0/Turbine.exe) — bitte mit `SHA256SUMS.txt` auf der [Release-Seite](https://github.com/ReinhardJesolowitz24/Turbine/releases/tag/v6.2.0) abgleichen
 
 1. `Turbine.exe` in einen beliebigen Ordner speichern
 2. Per Doppelklick starten (keine Installation nötig — portabel)
@@ -98,7 +99,7 @@ eingeben (oder dieselbe Schlüsseldatei laden) und **START** klicken.
 
 **Voraussetzung:** Windows + .NET Framework 4.8 (bei Windows 10/11 bereits installiert).
 
-> *Alternativ kannst du das gesamte Repository klonen oder den Quellcode-ZIP von der [Releases-Seite](https://github.com/ReinhardJesolowitz24/Turbine/releases/tag/v6.1.0) laden — die Binärdatei liegt zusätzlich unter `Turbine_Release/binary/`.*
+> *Alternativ kannst du das gesamte Repository klonen oder den Quellcode-ZIP von der [Releases-Seite](https://github.com/ReinhardJesolowitz24/Turbine/releases/tag/v6.2.0) laden — die Binärdatei liegt zusätzlich unter `Turbine_Release/binary/`.*
 
 ---
 

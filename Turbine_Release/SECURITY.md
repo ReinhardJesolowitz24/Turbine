@@ -100,7 +100,7 @@ deniability), not cryptography.
   file from silently producing a weak, near-public key. Real photographs pass
   easily; use a genuine photo. The check runs only on encryption, so **existing
   files stay decryptable** even if they were made with a weak key file.
-- **Key-file generator** (current source, planned V6.2) — *generate key file*
+- **Key-file generator** (V6.2) — *generate key file*
   writes 8 192 bytes = OS CSPRNG (`RNGCryptoServiceProvider`) XOR a SHA-512
   counter stream over `"TURBINE-KEYGEN-v1" ‖ 2 × 32 B timing-jitter entropy`
   (same independent second source as the IV). If either source is sound, the
